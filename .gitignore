@@ -1,0 +1,84 @@
+# Build
+bin/
+obj/
+out/
+
+# Visual Studio
+.vs/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / VS Code
+.idea/
+.vscode/
+*.code-workspace
+
+# Logs
+logs/
+*.log
+
+# Test Results
+TestResults/
+coverage/
+coverage*.json
+coverage*.xml
+
+# NuGet
+*.nupkg
+*.snupkg
+
+# Node
+node_modules/
+
+# Publish
+publish/
+Publish/
+
+# Environment / Secrets
+.env
+.env.*
+**/secrets.json
+**/appsettings.Development.json
+
+# Azure Publish Profiles
+*.pubxml
+*.publishsettings
+
+# OS Files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# BenchmarkDotNet
+BenchmarkDotNet.Artifacts/
+
+# Local History
+.localhistory/
+
+# Generated Files
+Generated Files/
+
+# ReSharper
+_ReSharper*/
+*.DotSettings.user
+
+# NCrunch
+*NCrunch*
+nCrunchTemp_*
+
+# Temporary Files
+*.tmp
+*.temp
+*.cache
+
+# Package Folders
+packages/
+
+# Docker
+docker-compose.override.yml
+
+# EF Core migration bundles
+efbundle*
