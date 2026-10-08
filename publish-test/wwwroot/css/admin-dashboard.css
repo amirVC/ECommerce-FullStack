@@ -1,0 +1,457 @@
+﻿/* =========================================================
+   Admin Dashboard — Design Tokens
+========================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --ink-900: #10132B;
+    --ink-600: #4B5169;
+    --ink-400: #8992A9;
+    --canvas: #F3F5FA;
+    --surface: #FFFFFF;
+    --line: #E7EAF3;
+    --line-soft: #EFF2F8;
+    --brand: #3654F3;
+    --brand-600: #2A42D6;
+    --brand-100: #E8ECFF;
+    --growth: #0EA968;
+    --growth-100: #E3FBF0;
+    --alert: #F59E0B;
+    --alert-100: #FFF4E0;
+    --danger: #EF4444;
+    --danger-100: #FDE8E8;
+    --violet: #7C5CFC;
+    --violet-100: #EFEAFF;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --shadow-sm: 0 2px 10px rgba(16, 19, 43, .04);
+    --shadow-md: 0 10px 26px rgba(16, 19, 43, .08);
+    --shadow-lg: 0 20px 44px rgba(16, 19, 43, .14);
+}
+
+body {
+    background: var(--canvas);
+    color: var(--ink-900);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.container-fluid {
+    padding-top: 24px;
+}
+
+h1, h2, h3, h4, h5,
+.card-value {
+    font-family: 'Sora', 'Inter', sans-serif;
+}
+
+/* =========================================================
+   Page Header
+========================================================= */
+
+.container-fluid > .mb-4 h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--ink-900);
+    letter-spacing: -.01em;
+}
+
+.container-fluid > .mb-4 p.text-muted {
+    color: var(--ink-400) !important;
+    font-size: .95rem;
+}
+
+/* =========================================================
+   KPI / Generic Dashboard Cards
+========================================================= */
+
+.dashboard-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+    .dashboard-card::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--brand), var(--violet));
+        opacity: 0;
+        transition: opacity .25s ease;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+    }
+
+        .dashboard-card:hover::after {
+            opacity: 1;
+        }
+
+    .dashboard-card hr {
+        margin: 18px 0;
+        border-color: var(--line-soft);
+    }
+
+.dashboard-card-title {
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: var(--ink-900);
+}
+
+.dashboard-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Icon chip — default brand gradient; add a semantic
+   modifier class in the partial to color-code by meaning:
+   .card-icon.bg-revenue / .bg-orders / .bg-customers / .bg-stock */
+.card-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 26px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--brand), var(--brand-600));
+    box-shadow: 0 8px 16px rgba(54, 84, 243, .25);
+}
+
+    .card-icon.bg-revenue, .quick-action-icon.bg-revenue {
+        background: linear-gradient(135deg, var(--brand), var(--brand-600));
+        box-shadow: 0 8px 16px rgba(54,84,243,.25);
+    }
+
+    .card-icon.bg-orders, .quick-action-icon.bg-orders {
+        background: linear-gradient(135deg, var(--growth), #0C8F58);
+        box-shadow: 0 8px 16px rgba(14,169,104,.25);
+    }
+
+    .card-icon.bg-customers, .quick-action-icon.bg-customers {
+        background: linear-gradient(135deg, var(--violet), #6746E0);
+        box-shadow: 0 8px 16px rgba(124,92,252,.25);
+    }
+
+    .card-icon.bg-stock, .quick-action-icon.bg-stock {
+        background: linear-gradient(135deg, var(--alert), #DB8B04);
+        box-shadow: 0 8px 16px rgba(245,158,11,.25);
+    }
+
+.card-title {
+    font-size: .82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ink-400);
+    margin-bottom: 6px;
+}
+
+.card-value {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: var(--ink-900);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================
+   Revenue Chart Card
+========================================================= */
+
+.dashboard-chart-card {
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+}
+
+canvas {
+    max-height: 350px;
+}
+
+.chart-wrapper {
+    position: relative;
+    flex: 1;
+    min-height: 340px;
+}
+
+/* =========================================================
+   Progress bars (Top Selling Products)
+========================================================= */
+
+.progress,
+.dashboard-progress {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--line-soft);
+}
+
+    .progress-bar,
+    .dashboard-progress .progress-bar {
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--brand), var(--violet));
+        transition: width .6s ease;
+    }
+
+/* =========================================================
+   Recent Orders / Low Stock line items
+========================================================= */
+
+.recent-order-item,
+.low-stock-item {
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    margin-bottom: 14px;
+    background: var(--surface);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+    .recent-order-item:last-child,
+    .low-stock-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .recent-order-item:hover,
+    .low-stock-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+        border-color: var(--brand-100);
+    }
+
+.low-stock-item {
+    border-left: 3px solid var(--alert);
+}
+
+/* =========================================================
+   Quick Actions
+========================================================= */
+
+.quick-action-card {
+    cursor: pointer;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+
+    .quick-action-card:hover {
+        transform: translateY(-6px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--brand-100);
+        text-decoration: none;
+    }
+
+    .quick-action-card h5 {
+        color: var(--ink-900);
+        font-weight: 700;
+    }
+
+    .quick-action-card small {
+        color: var(--ink-400);
+    }
+
+/* Compact list version — used when Quick Actions sits in a
+   narrow sidebar column, so it never depends on viewport
+   breakpoints and can't overflow its container. */
+.quick-action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.quick-action-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--line);
+    text-decoration: none;
+    transition: background-color .2s ease, transform .2s ease, border-color .2s ease;
+}
+
+    .quick-action-row:hover {
+        background: var(--canvas);
+        border-color: var(--brand-100);
+        transform: translateX(4px);
+        text-decoration: none;
+    }
+
+.quick-action-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.quick-action-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.quick-action-title {
+    font-weight: 700;
+    font-size: .92rem;
+    color: var(--ink-900);
+}
+
+.quick-action-sub {
+    font-size: .78rem;
+    color: var(--ink-400);
+}
+
+.quick-action-arrow {
+    color: var(--ink-400);
+    font-size: .85rem;
+    flex-shrink: 0;
+}
+
+/* =========================================================
+   Recent Activities Timeline
+========================================================= */
+
+.activity-timeline {
+    position: relative;
+    padding-left: 20px;
+}
+
+    .activity-timeline::before {
+        content: "";
+        position: absolute;
+        left: 9px;
+        top: 4px;
+        bottom: 4px;
+        width: 2px;
+        background: var(--line);
+    }
+
+.activity-item {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 26px;
+}
+
+    .activity-item:last-child {
+        margin-bottom: 0;
+    }
+
+.activity-dot {
+    position: absolute;
+    left: -1px;
+    width: 20px;
+    text-align: center;
+    color: var(--brand);
+    background: var(--surface);
+    z-index: 2;
+}
+
+.activity-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--brand-100);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--brand);
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.activity-content {
+    margin-left: 35px;
+    flex: 1;
+}
+
+/* =========================================================
+   Buttons
+========================================================= */
+
+.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+.btn-primary {
+    background: var(--brand);
+    border-color: var(--brand);
+}
+
+    .btn-primary:hover {
+        background: var(--brand-600);
+        border-color: var(--brand-600);
+    }
+
+.btn-outline-primary {
+    color: var(--brand);
+    border-color: var(--brand-100);
+    transition: transform .2s ease;
+}
+
+    .btn-outline-primary:hover {
+        background: var(--brand);
+        border-color: var(--brand);
+        transform: translateY(-2px);
+    }
+
+.btn-icon {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+    .btn-icon:hover {
+        transform: translateY(-2px) scale(1.05);
+    }
+
+/* =========================================================
+   Responsive
+========================================================= */
+
+@media (max-width: 767.98px) {
+    .card-value {
+        font-size: 1.5rem;
+    }
+
+    .card-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 22px;
+    }
+
+    .dashboard-chart-card {
+        min-height: 380px;
+    }
+}

@@ -1,9 +1,23 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Areas\Admin\Models\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+  </ItemGroup>
+
+  <Target Name="CompressStaticAssets" BeforeTargets="Publish">
+    <Message Importance="high" Text="Compressing static assets (Bootstrap/jQuery) before publish..." />
+    <Exec Command="dotnet build &quot;$(MSBuildProjectDirectory)\..\tools\CompressAssets\CompressAssets.csproj&quot; -c Release -o &quot;$(MSBuildProjectDirectory)\..\tools\CompressAssets\bin\publish-tool&quot;" />
+    <Exec Command="dotnet &quot;$(MSBuildProjectDirectory)\..\tools\CompressAssets\bin\publish-tool\CompressAssets.dll&quot; &quot;$(MSBuildProjectDirectory)\wwwroot\lib&quot;" />
+  </Target>
 
 </Project>

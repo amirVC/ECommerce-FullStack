@@ -1,0 +1,205 @@
+﻿@model ECommerce.Web.DTOs.PagedResultDto<ECommerce.Web.DTOs.AdminReviewDto>
+@{
+    ViewData["Title"] = "Review Moderation";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    var statusFilter = ViewBag.StatusFilter as string;
+}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="fw-bold mb-1">Review Moderation</h2>
+        <p class="text-muted mb-0">@Model.TotalCount total review@(Model.TotalCount == 1 ? "" : "s")</p>
+    </div>
+
+    <div class="btn-group" role="group">
+        <a asp-action="Index" class="btn btn-sm @(string.IsNullOrEmpty(statusFilter) ? "btn-dark" : "btn-outline-dark")">
+            All
+        </a>
+        <a asp-action="Index" asp-route-status="Approved" class="btn btn-sm @(statusFilter == "Approved" ? "btn-success" : "btn-outline-success")">
+            <i class="bi bi-check-circle"></i> Approved
+        </a>
+        <a asp-action="Index" asp-route-status="Hidden" class="btn btn-sm @(statusFilter == "Hidden" ? "btn-secondary" : "btn-outline-secondary")">
+            <i class="bi bi-eye-slash"></i> Hidden
+        </a>
+    </div>
+</div>
+
+@if (!Model.Items.Any())
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-chat-square-text display-4 text-muted d-block mb-3"></i>
+            <h5 class="text-muted mb-1">No reviews here</h5>
+            <p class="text-muted mb-0 small">
+                @(string.IsNullOrEmpty(statusFilter) ? "No reviews have been submitted yet." : $"No {statusFilter.ToLower()} reviews found.")
+            </p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Reviewer</th>
+                        <th>Product</th>
+                        <th>Rating</th>
+                        <th>Review</th>
+                        <th>Photo</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th class="text-end pe-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Items)
+                    {
+                        var initial = string.IsNullOrEmpty(r.UserName) ? "?" : r.UserName.Trim()[0].ToString().ToUpper();
+                        <tr>
+                            <td class="ps-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                                         style="width:36px; height:36px; font-size:0.9rem; font-weight:600;">
+                                        @initial
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold" style="line-height:1.2;">@r.UserName</div>
+                                        @if (r.IsVerifiedPurchase)
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.7rem;">
+                                                <i class="bi bi-patch-check-fill"></i> Verified
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="text-muted">@r.ProductName</td>
+
+                            <td>
+                                <div class="text-warning" style="white-space:nowrap;">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="bi @(i <= r.Rating ? "bi-star-fill" : "bi-star") small"></i>
+                                    }
+                                </div>
+                            </td>
+
+                            <td style="max-width:280px;">
+                                @if (!string.IsNullOrEmpty(r.Title))
+                                {
+                                    <div class="fw-semibold small">@r.Title</div>
+                                }
+                                <div class="text-muted small" title="@r.Comment">
+                                    @(r.Comment.Length > 70 ? r.Comment[..70] + "…" : r.Comment)
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (!string.IsNullOrEmpty(r.ImageUrl))
+                                {
+                                    <img src="@r.ImageUrl" class="rounded border" style="width:44px; height:44px; object-fit:cover; cursor:pointer;"
+                                         onclick="showAdminReviewImage('@r.ImageUrl')" alt="Review photo" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (r.Status == "Approved")
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        <i class="bi bi-check-circle-fill"></i> Approved
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">
+                                        <i class="bi bi-eye-slash-fill"></i> Hidden
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-muted small" style="white-space:nowrap;">
+                                @r.CreatedAt.ToString("MMM dd, yyyy")
+                            </td>
+
+                            <td class="text-end pe-3">
+                                <div class="d-flex justify-content-end gap-1">
+                                    <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@r.Id" />
+                                        <input type="hidden" name="statusFilter" value="@statusFilter" />
+                                        <input type="hidden" name="status" value="@(r.Status == "Approved" ? "Hidden" : "Approved")" />
+                                        <button type="submit" class="btn btn-sm btn-outline-warning" title="@(r.Status == "Approved" ? "Hide review" : "Approve review")">
+                                            <i class="bi @(r.Status == "Approved" ? "bi-eye-slash" : "bi-check-lg")"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Delete this review permanently?');">
+                                        <input type="hidden" name="id" value="@r.Id" />
+                                        <input type="hidden" name="statusFilter" value="@statusFilter" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete review">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" asp-route-status="@statusFilter">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-status="@statusFilter">@i</a>
+                    </li>
+                }
+                <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" asp-route-status="@statusFilter">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
+
+<!-- Photo lightbox -->
+<div class="modal fade" id="adminReviewImageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark border-0">
+            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2" data-bs-dismiss="modal"></button>
+            <img id="adminReviewImageModalImg" src="" class="img-fluid rounded" alt="Review photo" />
+        </div>
+    </div>
+</div>
+
+<style>
+    .table > :not(caption) > * > * {
+        padding-top: 0.9rem;
+        padding-bottom: 0.9rem;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function showAdminReviewImage(src) {
+            document.getElementById('adminReviewImageModalImg').src = src;
+            new bootstrap.Modal(document.getElementById('adminReviewImageModal')).show();
+        }
+    </script>
+}

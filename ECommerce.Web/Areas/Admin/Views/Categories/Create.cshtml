@@ -1,0 +1,64 @@
+﻿@model ECommerce.Web.ViewModels.AdminCreateCategoryViewModel
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Create Category";
+}
+
+<div class="container">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0">
+                📂 Create Category
+            </h4>
+        </div>
+
+        <div class="card-body">
+
+            <form asp-action="Create" method="post">
+
+                <div class="mb-3">
+
+                    <label asp-for="Category.Name"
+                           class="form-label"></label>
+
+                    <input asp-for="Category.Name"
+                           class="form-control form-control-lg"/>
+
+                    <span asp-validation-for="Category.Name"
+                          class="text-danger"></span>
+
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+
+                    <a asp-action="Index"
+                       class="btn btn-secondary">
+
+                        Cancel
+
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-success">
+
+                        Save Category
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+}

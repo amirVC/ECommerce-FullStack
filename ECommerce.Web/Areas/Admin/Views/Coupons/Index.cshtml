@@ -1,0 +1,136 @@
+﻿@model List<ECommerce.Web.DTOs.CouponDto>
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Coupons";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>🏷️ Coupons</h2>
+    <a asp-action="Create" class="btn btn-primary">
+        + Create Coupon
+    </a>
+</div>
+
+<table class="table table-bordered table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>Code</th>
+            <th>Discount</th>
+            <th>Scope</th>
+            <th>Usage</th>
+            <th>Window</th>
+            <th>Status</th>
+            <th width="180">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">No coupons yet.</td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var coupon in Model)
+            {
+                <tr>
+                    <td><code>@coupon.Code</code></td>
+                    <td>
+                        @switch (coupon.DiscountType)
+                        {
+                            case "Percentage":
+                                @($"{coupon.DiscountValue}% off")
+                                break;
+                            case "FixedAmount":
+                                @coupon.DiscountValue?.ToString("C") <text> off</text>
+                                break;
+                            case "FreeShipping":
+                                <span class="badge bg-info text-dark">Free shipping</span>
+                                break;
+                        }
+                        @if (coupon.MaxDiscountAmount.HasValue)
+                        {
+                            <div class="text-muted small">max @coupon.MaxDiscountAmount.Value.ToString("C")</div>
+                        }
+                    </td>
+                    <td>
+                        @coupon.Scope
+                        @if (coupon.Scope == "SpecificProducts")
+                        {
+                            <div class="text-muted small">@coupon.ProductIds.Count product(s)</div>
+                        }
+                        else if (coupon.Scope == "SpecificCategories")
+                        {
+                            <div class="text-muted small">@coupon.CategoryIds.Count categor(y/ies)</div>
+                        }
+                    </td>
+                    <td>
+                        @coupon.TimesUsed
+                        @(coupon.UsageLimitTotal.HasValue ? $" / {coupon.UsageLimitTotal}" : " / ∞")
+                        @if (coupon.UsageLimitPerUser.HasValue)
+                        {
+                            <div class="text-muted small">@coupon.UsageLimitPerUser per user</div>
+                        }
+                    </td>
+                    <td class="small">
+                        @coupon.StartDate.ToString("MMM d, yyyy")
+                        –
+                        @(coupon.EndDate.HasValue? coupon.EndDate.Value.ToString("MMM d, yyyy") : "No end")
+                    </td>
+                    <td>
+                        @{
+                            var now = DateTime.UtcNow;
+
+                            var isCurrentlyActive =
+                            coupon.IsActive &&
+                            coupon.StartDate <= now &&
+                            (!coupon.EndDate.HasValue || coupon.EndDate.Value >= now) &&
+                            (!coupon.UsageLimitTotal.HasValue ||
+                            coupon.TimesUsed < coupon.UsageLimitTotal.Value);
+                        }
+
+                        @if (isCurrentlyActive)
+                        {
+                            <span class="badge bg-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactive</span>
+                        }
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@coupon.Id" class="btn btn-warning btn-sm">
+                            ✏️ Edit
+                        </a>
+                        <form asp-action="Delete" asp-route-id="@coupon.Id" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Delete coupon &quot;@coupon.Code&quot;? This cannot be undone.');">
+                                🗑 Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@if ((int)(ViewBag.TotalPages ?? 1) > 1)
+{
+    <nav>
+        <ul class="pagination justify-content-center">
+            @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+            {
+                <li class="page-item @(i == (int)ViewBag.CurrentPage ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

@@ -1,0 +1,1405 @@
+﻿@model ECommerce.Web.ViewModels.ProductDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.Product.Name;
+}
+
+<div class="container mt-5 mb-5">
+
+    <div class="row g-5">
+
+        <!-- ===================== IMAGE & GALLERY ===================== -->
+        <div class="col-md-6">
+
+            <!-- Main Image -->
+            <div class="main-image-wrapper mb-3 d-flex align-items-center justify-content-center bg-light rounded-4 shadow-sm border p-3"
+                 style="height: 450px; width: 100%;">
+
+                @if (string.IsNullOrWhiteSpace(Model.Product.ImageUrl) &&
+                                (Model.Product.Images == null || !Model.Product.Images.Any()))
+                {
+                    <img id="mainProductImage"
+                         src="https://placehold.co/700x500?text=No+Image"
+                         class="img-fluid mh-100"
+                         style="object-fit: contain; max-height: 100%;"
+                         alt="No image available" />
+                }
+                else
+                {
+                    <img id="mainProductImage"
+                         src="@(!string.IsNullOrEmpty(Model.Product.ImageUrl)
+                                                                               ? Model.Product.ImageUrl
+                                                                               : Model.Product.Images.FirstOrDefault()?.ImageUrl)"
+                     alt="@Model.Product.Name"
+                     class="img-fluid mh-100"
+                     style="object-fit: contain; max-height: 100%;" />
+                                }
+
+            </div>
+
+            <!-- Thumbnail Gallery -->
+            @if (Model.Product.Images != null && Model.Product.Images.Any())
+            {
+                <div class="d-flex flex-wrap gap-2 mt-3">
+
+                    <!-- Cover Image -->
+                    @if (!string.IsNullOrEmpty(Model.Product.ImageUrl))
+                    {
+                        <div class="thumb-box bg-light rounded-3 border border-primary p-1 d-flex align-items-center justify-content-center"
+                             style="width: 80px; height: 80px; cursor: pointer;"
+                             onclick="switchMainImage('@Model.Product.ImageUrl', this)">
+
+                            <img src="@Model.Product.ImageUrl"
+                                 class="w-100 h-100"
+                                 style="object-fit: contain;"
+                                 alt="@Model.Product.Name cover" />
+
+                        </div>
+                    }
+
+                    <!-- Gallery Images -->
+                    @foreach (var img in Model.Product.Images)
+                    {
+                        if (img.ImageUrl != Model.Product.ImageUrl)
+                        {
+                            <div class="thumb-box bg-light rounded-3 border p-1 d-flex align-items-center justify-content-center"
+                                 style="width: 80px; height: 80px; cursor: pointer;"
+                                 onclick="switchMainImage('@img.ImageUrl', this)">
+
+                                <img src="@img.ImageUrl"
+                                     alt="@(img.AltText ?? Model.Product.Name)"
+                                     class="w-100 h-100"
+                                     style="object-fit: contain;" />
+
+                            </div>
+                        }
+                    }
+
+                </div>
+            }
+
+        </div>
+
+
+        <!-- ===================== PRODUCT DETAILS ===================== -->
+        <div class="col-md-6">
+
+            <!-- Category -->
+            @if (!string.IsNullOrEmpty(Model.Product.CategoryName))
+            {
+                <span class="badge rounded-pill text-bg-light border text-muted fw-normal px-3 py-2 mb-2">
+                    @Model.Product.CategoryName
+                </span>
+            }
+
+            <!-- Product Name -->
+            <h1 class="fw-bold mt-2">
+                @Model.Product.Name
+            </h1>
+
+
+            <!-- ===================== RATING ===================== -->
+            @if (Model.ReviewSummary.TotalReviews > 0)
+            {
+                <div class="mb-3">
+
+                    @{
+                        var headerFull =
+                        (int)Math.Round(Model.ReviewSummary.AverageRating);
+                    }
+
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <i class="bi @(i <= headerFull
+                                                                                  ? "bi-star-fill text-warning"
+                                                                                  : "bi-star text-muted")"></i>
+                                }
+
+                    <a href="#reviews"
+                       class="text-muted small ms-1 text-decoration-none">
+
+                        @Model.ReviewSummary.AverageRating.ToString("0.0")
+                        (@Model.ReviewSummary.TotalReviews review(s))
+
+                    </a>
+
+                </div>
+            }
+
+
+            <!-- ===================== UNIFIED PRODUCT PRICE ===================== -->
+
+            <div class="mb-4">
+
+                @if (Model.Product.TotalDiscountAmount > 0)
+                {
+                    <!-- Discount Labels -->
+                    <div class="mb-2">
+
+                        @if (Model.Product.IsOnSale)
+                        {
+                            <span class="badge bg-danger me-1">
+                                SALE
+                            </span>
+                        }
+
+                        @if (Model.Product.HasCampaign)
+                        {
+                            <span class="badge bg-warning text-dark me-1">
+                                CAMPAIGN
+                            </span>
+                        }
+
+                    </div>
+
+
+                    <!-- Original Price -->
+                    <div>
+                        <span class="text-muted text-decoration-line-through fs-5">
+                            @Model.Product.Price.ToString("C")
+                        </span>
+                    </div>
+
+
+                    <!-- Final Customer Price -->
+                    <div>
+                        <span class="text-danger fw-bold fs-2">
+                            @Model.Product.FinalPrice.ToString("C")
+                        </span>
+                    </div>
+
+
+                    <!-- Total Saving -->
+                    <div class="mt-2">
+
+                        <span class="badge bg-success">
+                            Save @Model.Product.TotalDiscountAmount.ToString("C")
+                        </span>
+
+                        @if (Model.Product.Price > 0)
+                        {
+                            var discountPercentage =
+                            (Model.Product.TotalDiscountAmount /
+                            Model.Product.Price) * 100;
+
+                            <span class="text-success small ms-2">
+                                @discountPercentage.ToString("0")% OFF
+                            </span>
+                        }
+
+                    </div>
+
+
+                    <!-- Sale End Date -->
+                    @if (Model.Product.IsOnSale &&
+                                    Model.Product.SaleEndDate.HasValue)
+                    {
+                        <div class="text-muted small mt-2">
+
+                            <i class="bi bi-clock me-1"></i>
+
+                            Sale ends
+                            @Model.Product.SaleEndDate.Value.ToString("MMM d, yyyy")
+
+                        </div>
+                    }
+
+
+                    <!-- Campaign Name -->
+                    @if (Model.Product.HasCampaign &&
+                                    !string.IsNullOrWhiteSpace(Model.Product.CampaignName))
+                    {
+                        <div class="text-warning-emphasis small mt-2">
+
+                            <i class="bi bi-megaphone-fill me-1"></i>
+
+                            @Model.Product.CampaignName
+
+                        </div>
+                    }
+
+                }
+                else
+                {
+                    <!-- Normal Price -->
+                    <h2 class="text-primary fw-bold mb-3">
+                        @Model.Product.FinalPrice.ToString("C")
+                    </h2>
+                }
+
+            </div>
+
+
+            <!-- ===================== DESCRIPTION ===================== -->
+
+            <p class="text-muted"
+               style="line-height: 1.7;">
+
+                @Model.Product.Description
+
+            </p>
+
+
+            <!-- ===================== STOCK ===================== -->
+
+            <p class="mb-4">
+
+                @if (Model.Product.Stock > 10)
+                {
+                    <span class="badge px-3 py-2"
+                          style="background-color: #00FF6F; color: #000000;">
+
+                        ✓ In Stock —
+                        @Model.Product.Stock available
+
+                    </span>
+                }
+                else if (Model.Product.Stock > 0)
+                {
+                    <span class="badge px-3 py-2"
+                          style="background-color: #FFFF00; color: #000000;">
+
+                        ⚠ Low Stock —
+                        @Model.Product.Stock left
+
+                    </span>
+                }
+                else
+                {
+                    <span class="badge px-3 py-2"
+                          style="background-color: #dc3545; color: #ffffff;">
+
+                        Out of Stock
+
+                    </span>
+                }
+
+            </p>
+
+
+            <!-- ===================== ACTIONS ===================== -->
+
+            <div class="d-flex gap-2">
+
+                <a asp-controller="Cart"
+                   asp-action="Add"
+                   asp-route-id="@Model.Product.Id"
+                   class="btn btn-success btn-lg px-4 @(Model.Product.Stock <= 0 ? "disabled" : "")">
+
+                    🛒 Add to Cart
+
+                </a>
+
+
+                @{
+                    var isWishlisted =
+                    ViewBag.IsWishlisted as bool? ?? false;
+                }
+
+                <button type="button"
+                        id="wishlistBtn"
+                        data-product-id="@Model.Product.Id"
+                        class="btn btn-lg px-4 @(isWishlisted
+                                                                            ? "btn-danger"
+                                                                            : "btn-outline-secondary")"
+                        onclick="toggleWishlist(this)">
+
+                    <span class="wl-icon">
+                        @(isWishlisted ? "❤️" : "🤍")
+                    </span>
+
+                    <span class="wl-text">
+                        @(isWishlisted
+                                                ? "Remove from Wishlist"
+                                                : "Add to Wishlist")
+                    </span>
+
+                </button>
+
+
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary btn-lg px-4">
+
+                    Back
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================== RELATED PRODUCTS ===================== -->
+    @if (Model.RelatedProducts.Any())
+    {
+        <hr class="my-5" />
+
+        <h3 class="fw-bold mb-4">
+            Related Products
+        </h3>
+
+        <div class="row g-4">
+
+            @foreach (var item in Model.RelatedProducts)
+            {
+                <div class="col-6 col-md-3">
+
+                    <div class="card h-100 border-0 shadow-sm related-product-card">
+
+                        <div class="overflow-hidden rounded-top-4 bg-light d-flex align-items-center justify-content-center p-2"
+                             style="height: 200px;">
+
+                            <img src="@(string.IsNullOrWhiteSpace(item.ImageUrl)
+                                                                                                  ? "https://placehold.co/600x400?text=No+Image"
+                                                                                                  : item.ImageUrl)"
+                         class="card-img-top"
+                         alt="@item.Name"
+                         style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                         loading="lazy">
+
+                        </div>
+
+
+                        <div class="card-body d-flex flex-column">
+
+                            <h5 class="card-title fs-6 fw-semibold">
+                                @item.Name
+                            </h5>
+
+
+                    @if (item.TotalDiscountAmount > 0)
+                            {
+                                <div class="mb-3">
+
+                                    @if (item.IsOnSale)
+                                    {
+                                        <span class="badge bg-danger">
+                                            SALE
+                                        </span>
+                                    }
+
+                                    @if (item.HasCampaign)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            CAMPAIGN
+                                        </span>
+                                    }
+
+                                    <div class="mt-1">
+
+                                        <span class="text-muted text-decoration-line-through small">
+                                            @item.Price.ToString("C")
+                                        </span>
+
+                                        <span class="text-danger fw-bold ms-1">
+                                            @item.FinalPrice.ToString("C")
+                                        </span>
+
+                                    </div>
+
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="card-text text-primary fw-bold mb-3">
+                                    @item.FinalPrice.ToString("C")
+                                </p>
+                            }
+
+
+                            <a asp-action="Details"
+                               asp-route-id="@item.Id"
+                               class="btn btn-outline-primary btn-sm mt-auto">
+
+                                View Product
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+
+    <!-- ===================== RECENTLY VIEWED ===================== -->
+    @if (Model.RecentlyViewed.Any())
+    {
+        <hr class="my-5" />
+
+        <h3 class="fw-bold mb-4">
+            Recently Viewed
+        </h3>
+
+        <div class="row g-4">
+
+            @foreach (var item in Model.RecentlyViewed)
+            {
+                <div class="col-6 col-md-3">
+
+                    <div class="card h-100 border-0 shadow-sm related-product-card">
+
+                        <!-- Product Image -->
+                        <div class="overflow-hidden rounded-top-4 bg-light d-flex align-items-center justify-content-center p-2"
+                             style="height: 200px;">
+
+                            <img src="@(string.IsNullOrWhiteSpace(item.ImageUrl)
+                                                                                          ? "https://placehold.co/600x400?text=No+Image"
+                                                                                          : item.ImageUrl)"
+                         class="card-img-top"
+                         alt="@item.Name"
+                         style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                         loading="lazy">
+
+                        </div>
+
+                        <!-- Product Information -->
+                        <div class="card-body d-flex flex-column">
+
+                            <!-- Product Name -->
+                            <h5 class="card-title fs-6 fw-semibold">
+                                @item.Name
+                            </h5>
+
+                            <!-- Rating -->
+                    @if (item.ReviewCount > 0)
+                            {
+                                <div class="text-warning small mb-2">
+
+                                    @{
+                                        var rvFull =
+                                        (int)Math.Round(item.AverageRating);
+                                    }
+
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="bi @(i <= rvFull
+                                                                                                       ? "bi-star-fill"
+                                                                                                       : "bi-star")"></i>
+                                                }
+
+                                    <span class="text-muted">
+                                        (@item.ReviewCount)
+                                    </span>
+
+                                </div>
+                            }
+
+                            <!-- PRICE / DISCOUNT / CAMPAIGN -->
+                            @if (item.TotalDiscountAmount > 0)
+                            {
+                                <div class="mb-3">
+
+                                    <!-- Sale Label -->
+                                    @if (item.IsOnSale)
+                                    {
+                                        <span class="badge bg-danger">
+                                            SALE
+                                        </span>
+                                    }
+
+                                    <!-- Campaign Label -->
+                                    @if (item.HasCampaign)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            CAMPAIGN
+                                        </span>
+                                    }
+
+                                    <!-- Original + Final Price -->
+                                    <div class="mt-1">
+
+                                        <span class="text-muted text-decoration-line-through small">
+                                            @item.Price.ToString("C")
+                                        </span>
+
+                                        <span class="text-danger fw-bold ms-1">
+                                            @item.FinalPrice.ToString("C")
+                                        </span>
+
+                                    </div>
+
+                                </div>
+                            }
+                            else
+                            {
+                                <!-- Normal Price -->
+                                <p class="card-text text-primary fw-bold mb-3">
+                                    @item.FinalPrice.ToString("C")
+                                </p>
+                            }
+
+                            <!-- View Product -->
+                            <a asp-action="Details"
+                               asp-route-id="@item.Id"
+                               class="btn btn-outline-primary btn-sm mt-auto">
+
+                                View Product
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+    <!-- ===================== REVIEWS ===================== -->
+
+    <hr class="my-5" />
+
+    <div id="reviews" class="reviews-section">
+
+        <h3 class="fw-bold mb-4">
+            Ratings &amp; Reviews
+        </h3>
+
+
+        <!-- Review Summary -->
+
+        <div class="card border-0 shadow-sm mb-4">
+
+            <div class="card-body">
+
+                <div class="row align-items-center g-4">
+
+                    <div class="col-md-4 text-center border-md-end">
+
+                        <div class="display-3 fw-bold text-dark lh-1">
+                            @Model.ReviewSummary.AverageRating.ToString("0.0")
+                        </div>
+
+                        <div class="text-warning fs-4 my-2">
+
+                            @{
+                                var full =
+                                (int)Math.Round(
+                                Model.ReviewSummary.AverageRating);
+                            }
+
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <i class="bi @(i <= full
+                                                                                                          ? "bi-star-fill"
+                                                                                                          : "bi-star")"></i>
+                                                        }
+
+                        </div>
+
+                        <div class="text-muted small">
+                            based on
+                            @Model.ReviewSummary.TotalReviews
+                            review(s)
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-8">
+
+                        @for (int star = 5; star >= 1; star--)
+                        {
+                            var count =
+                            Model.ReviewSummary.RatingBreakdown
+                            .TryGetValue(star, out var c)
+                            ? c
+                            : 0;
+
+                            var pct =
+                            Model.ReviewSummary.TotalReviews > 0
+                            ? (count * 100.0 /
+                            Model.ReviewSummary.TotalReviews)
+                            : 0;
+
+                            <div class="d-flex align-items-center gap-2 mb-2">
+
+                                <span class="small text-muted"
+                                      style="width:36px;">
+
+                                    @star ★
+
+                                </span>
+
+                                <div class="progress flex-grow-1"
+                                     style="height:8px;">
+
+                                    <div class="progress-bar bg-warning"
+                                         role="progressbar"
+                                         style="width:@pct.ToString("0")%">
+                                    </div>
+
+                                </div>
+
+                                <span class="small text-muted text-end"
+                                      style="width:32px;">
+
+                                    @count
+
+                                </span>
+
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Write Review -->
+        @if (Model.CanReview)
+        {
+            <div class="card border-0 shadow-sm mb-4">
+
+                <div class="card-body">
+
+                    <h6 class="fw-bold mb-3">
+
+                        <i class="bi bi-pencil-square me-1"></i>
+                        Write a review
+
+                    </h6>
+
+
+                    <form asp-action="SubmitReview"
+                          asp-controller="Products"
+                          method="post"
+                          enctype="multipart/form-data"
+                          data-review-form
+                          data-msg="createReviewMsg">
+
+                        <input type="hidden"
+                               name="ProductId"
+                               value="@Model.Product.Id" />
+
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-muted d-block mb-1">
+                                Your rating
+                            </label>
+
+                            <div class="star-picker"
+                                 data-input="ratingInput"
+                                 data-msg="createReviewMsg">
+                            </div>
+
+                            <input type="hidden"
+                                   name="Rating"
+                                   id="ratingInput"
+                                   value="0" />
+
+                            <div id="createReviewMsg"
+                                 class="text-warning small mt-1 d-none">
+                            </div>
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <input name="Title"
+                                   class="form-control"
+                                   placeholder="Give your review a title (optional)" />
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <textarea name="Comment"
+                                  class="form-control"
+                                  rows="3"
+                                  required
+                                  minlength="10"
+                                  placeholder="What did you like or dislike? How did you use it?"></textarea>
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-muted">
+                                Add a photo (optional)
+                            </label>
+
+                            <input type="file"
+                                   name="Image"
+                                   id="createImageInput"
+                                   class="form-control"
+                                   accept="image/*" />
+
+                            <img id="createImagePreview"
+                                 class="d-none mt-2 rounded border"
+                                 style="max-width:120px; max-height:120px; object-fit:cover;" />
+
+                        </div>
+
+
+                        <button type="submit"
+                                class="btn btn-dark px-4">
+
+                            <i class="bi bi-send-fill me-1"></i>
+                            Submit Review
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+        }
+        else if (Model.MyReview != null)
+        {
+            <div class="card border-0 shadow-sm mb-4 bg-light-subtle">
+
+                <div class="card-body">
+
+                    <div class="d-flex align-items-center gap-2 mb-3">
+
+                        <i class="bi bi-person-check-fill text-primary fs-5"></i>
+
+                        <h6 class="fw-bold mb-0">
+                            Your review
+                        </h6>
+
+                    </div>
+
+
+                    <form asp-action="EditReview"
+                          asp-controller="Products"
+                          method="post"
+                          enctype="multipart/form-data"
+                          data-review-form
+                          data-msg="editReviewMsg">
+
+                        <input type="hidden"
+                               name="reviewId"
+                               value="@Model.MyReview.Id" />
+
+                        <input type="hidden"
+                               name="ProductId"
+                               value="@Model.Product.Id" />
+
+                        <input type="hidden"
+                               name="productId"
+                               value="@Model.Product.Id" />
+
+
+                        <div class="mb-3">
+
+                            <div class="star-picker"
+                                 data-input="editRatingInput"
+                                 data-value="@Model.MyReview.Rating"
+                                 data-msg="editReviewMsg">
+                            </div>
+
+                            <input type="hidden"
+                                   name="Rating"
+                                   id="editRatingInput"
+                                   value="@Model.MyReview.Rating" />
+
+                            <div id="editReviewMsg"
+                                 class="text-warning small mt-1 d-none">
+                            </div>
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <input name="Title"
+                                   class="form-control"
+                                   value="@Model.MyReview.Title"
+                                   placeholder="Title" />
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <textarea name="Comment"
+                                  class="form-control"
+                                  rows="3"
+                                  required
+                                  minlength="10">@Model.MyReview.Comment</textarea>
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            @if (!string.IsNullOrEmpty(Model.MyReview.ImageUrl))
+                            {
+                                <span class="text-muted small d-block mb-1">
+                                    Current photo
+                                </span>
+
+                                <img src="@Model.MyReview.ImageUrl"
+                                     class="rounded border mb-2"
+                                     style="width:90px; height:90px; object-fit:cover; cursor:pointer;"
+                                     onclick="showReviewImage('@Model.MyReview.ImageUrl')"
+                                     alt="Current review photo" />
+                            }
+
+
+                            <label class="form-label small text-muted d-block">
+                                Replace photo (optional)
+                            </label>
+
+                            <input type="file"
+                                   name="Image"
+                                   id="editImageInput"
+                                   class="form-control"
+                                   accept="image/*" />
+
+                            <img id="editImagePreview"
+                                 class="d-none mt-2 rounded border"
+                                 style="max-width:120px; max-height:120px; object-fit:cover;" />
+
+                        </div>
+
+
+                        <button type="submit"
+                                class="btn btn-outline-primary px-4">
+
+                            <i class="bi bi-check2-circle me-1"></i>
+                            Update Review
+
+                        </button>
+
+                    </form>
+
+
+                    <form asp-action="DeleteReview"
+                          asp-controller="Products"
+                          method="post"
+                          class="mt-2"
+                          onsubmit="return confirm('Delete your review?');">
+
+                        <input type="hidden"
+                               name="reviewId"
+                               value="@Model.MyReview.Id" />
+
+                        <input type="hidden"
+                               name="productId"
+                               value="@Model.Product.Id" />
+
+                        <button type="submit"
+                                class="btn btn-link btn-sm text-danger text-decoration-none p-0">
+
+                            <i class="bi bi-trash me-1"></i>
+                            Delete my review
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+        }
+
+
+        <!-- Review List -->
+        @if (!Model.Reviews.Any())
+        {
+            <div class="text-center text-muted py-4">
+
+                <i class="bi bi-chat-square-text display-6 d-block mb-2"></i>
+
+                Be the first to review this product.
+
+            </div>
+        }
+        else
+        {
+            @foreach (var review in Model.Reviews)
+            {
+                var initial =
+                string.IsNullOrEmpty(review.UserName)
+                ? "?"
+                : review.UserName.Trim()[0].ToString().ToUpper();
+
+                <div class="card border-0 border-bottom rounded-0 shadow-none px-0 py-3 mb-0">
+
+                    <div class="d-flex gap-3">
+
+                        <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:42px; height:42px; font-weight:600;">
+
+                            @initial
+
+                        </div>
+
+
+                        <div class="flex-grow-1">
+
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
+
+                                <div>
+
+                                    <div class="fw-semibold">
+                                        @review.UserName
+                                    </div>
+
+                                    <div class="text-warning small">
+
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="bi @(i <= review.Rating
+                                                                                                                                              ? "bi-star-fill"
+                                                                                                                                              : "bi-star")"></i>
+                                                                }
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="text-end">
+
+                                    @if (review.IsVerifiedPurchase)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle mb-1">
+
+                                            <i class="bi bi-patch-check-fill"></i>
+                                            Verified Purchase
+
+                                        </span>
+                                    }
+
+                                    <div class="text-muted small">
+                                        @review.CreatedAt.ToString("MMM dd, yyyy")
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            @if (!string.IsNullOrEmpty(review.Title))
+                            {
+                                <h6 class="mt-2 mb-1">
+                                    @review.Title
+                                </h6>
+                            }
+
+
+                            <p class="mb-2 text-body-secondary"
+                               style="line-height:1.6;">
+
+                                @review.Comment
+
+                            </p>
+
+
+                            @if (!string.IsNullOrEmpty(review.ImageUrl))
+                            {
+                                <img src="@review.ImageUrl"
+                                     class="rounded border"
+                                     style="width:90px; height:90px; object-fit:cover; cursor:pointer;"
+                                     onclick="showReviewImage('@review.ImageUrl')"
+                                     alt="Review photo" />
+                            }
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+        }
+
+    </div>
+
+</div>
+
+
+<!-- ===================== REVIEW IMAGE LIGHTBOX ===================== -->
+
+<div class="modal fade"
+     id="reviewImageModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <div class="modal-content bg-dark border-0">
+
+            <button type="button"
+                    class="btn-close btn-close-white position-absolute top-0 end-0 m-2"
+                    data-bs-dismiss="modal">
+            </button>
+
+            <img id="reviewImageModalImg"
+                 src=""
+                 class="img-fluid rounded"
+                 alt="Review image" />
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================== STYLES ===================== -->
+
+<style>
+
+    .related-product-card {
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+        .related-product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.1) !important;
+        }
+
+    .rounded-top-4 {
+        border-top-left-radius: 0.75rem;
+        border-top-right-radius: 0.75rem;
+    }
+
+    .star-picker {
+        font-size: 1.8rem;
+        cursor: pointer;
+        user-select: none;
+    }
+
+        .star-picker span {
+            color: #ccc;
+            transition: color 0.15s;
+        }
+
+            .star-picker span.active {
+                color: #ffc107;
+            }
+
+    .reviews-section .card {
+        border-radius: 0.9rem;
+    }
+
+</style>
+
+
+@section Scripts {
+
+    <script>
+
+        // ===================== IMAGE SWITCH =====================
+
+        function switchMainImage(src, containerElement) {
+
+            document.getElementById('mainProductImage').src = src;
+
+            document.querySelectorAll('.thumb-box').forEach(box => {
+                box.classList.remove('border-primary');
+            });
+
+            containerElement.classList.add('border-primary');
+        }
+
+
+        // ===================== WISHLIST =====================
+
+        async function toggleWishlist(btn) {
+
+            const productId = btn.dataset.productId;
+
+            btn.disabled = true;
+
+            try {
+
+                const response = await fetch('/Wishlist/ToggleAjax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type':
+                            'application/x-www-form-urlencoded'
+                    },
+                    body: `productId=${productId}`
+                });
+
+                if (response.status === 401) {
+
+                    window.location.href =
+                        '/Account/Login?returnUrl=' +
+                        encodeURIComponent(window.location.pathname);
+
+                    return;
+                }
+
+                const data = await response.json();
+
+                const icon = btn.querySelector('.wl-icon');
+                const text = btn.querySelector('.wl-text');
+
+                if (data.success) {
+
+                    if (data.isWishlisted) {
+
+                        icon.textContent = '❤️';
+
+                        text.textContent =
+                            'Remove from Wishlist';
+
+                        btn.classList.replace(
+                            'btn-outline-secondary',
+                            'btn-danger'
+                        );
+
+                    }
+                    else {
+
+                        icon.textContent = '🤍';
+
+                        text.textContent =
+                            'Add to Wishlist';
+
+                        btn.classList.replace(
+                            'btn-danger',
+                            'btn-outline-secondary'
+                        );
+
+                    }
+
+                    updateWishlistBadge(data.isWishlisted);
+
+                }
+                else {
+
+                    alert(
+                        data.message ||
+                        'Something went wrong.'
+                    );
+
+                }
+
+            }
+            catch (err) {
+
+                alert(
+                    'Network error, please try again.'
+                );
+
+            }
+            finally {
+
+                btn.disabled = false;
+
+            }
+
+        }
+
+
+        // ===================== STAR PICKERS =====================
+
+        document.querySelectorAll('.star-picker').forEach(picker => {
+
+            const inputId = picker.dataset.input;
+
+            const input =
+                document.getElementById(inputId);
+
+            const initial =
+                parseInt(
+                    picker.dataset.value || '0'
+                );
+
+            const msgEl =
+                document.getElementById(
+                    picker.dataset.msg
+                );
+
+
+            for (let i = 1; i <= 5; i++) {
+
+                const star =
+                    document.createElement('span');
+
+                star.textContent = '★';
+
+                star.dataset.value = i;
+
+                if (i <= initial) {
+                    star.classList.add('active');
+                }
+
+
+                star.addEventListener('click', () => {
+
+                    input.value = i;
+
+                    picker
+                        .querySelectorAll('span')
+                        .forEach(s => {
+
+                            s.classList.toggle(
+                                'active',
+                                parseInt(s.dataset.value) <= i
+                            );
+
+                        });
+
+
+                    if (msgEl) {
+                        msgEl.classList.add('d-none');
+                    }
+
+                });
+
+                picker.appendChild(star);
+
+            }
+
+        });
+
+
+        // ===================== REVIEW FORM VALIDATION =====================
+
+        document
+            .querySelectorAll('form[data-review-form]')
+            .forEach(form => {
+
+                form.addEventListener('submit', (e) => {
+
+                    const ratingInput =
+                        form.querySelector(
+                            'input[name="Rating"]'
+                        );
+
+                    const msgEl =
+                        document.getElementById(
+                            form.dataset.msg
+                        );
+
+
+                    if (!ratingInput.value ||
+                        ratingInput.value === '0') {
+
+                        e.preventDefault();
+
+                        if (msgEl) {
+
+                            msgEl.textContent =
+                                'Please select a rating before submitting your review 🙂';
+
+                            msgEl.classList.remove(
+                                'd-none'
+                            );
+
+                            msgEl.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+
+                        }
+
+                    }
+
+                });
+
+            });
+
+
+        // ===================== IMAGE PREVIEW =====================
+
+        function wireImagePreview(
+            inputId,
+            previewId
+        ) {
+
+            const input =
+                document.getElementById(inputId);
+
+            const preview =
+                document.getElementById(previewId);
+
+            if (!input || !preview)
+                return;
+
+
+            input.addEventListener('change', () => {
+
+                const file =
+                    input.files &&
+                    input.files[0];
+
+                if (!file) {
+
+                    preview.classList.add(
+                        'd-none'
+                    );
+
+                    return;
+                }
+
+
+                const reader =
+                    new FileReader();
+
+                reader.onload = e => {
+
+                    preview.src =
+                        e.target.result;
+
+                    preview.classList.remove(
+                        'd-none'
+                    );
+
+                };
+
+                reader.readAsDataURL(file);
+
+            });
+
+        }
+
+
+        wireImagePreview(
+            'createImageInput',
+            'createImagePreview'
+        );
+
+        wireImagePreview(
+            'editImageInput',
+            'editImagePreview'
+        );
+
+
+        // ===================== REVIEW IMAGE LIGHTBOX =====================
+
+        function showReviewImage(src) {
+
+            document
+                .getElementById(
+                    'reviewImageModalImg'
+                )
+                .src = src;
+
+            new bootstrap.Modal(
+                document.getElementById(
+                    'reviewImageModal'
+                )
+            ).show();
+
+        }
+
+    </script>
+
+}

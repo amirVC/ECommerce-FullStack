@@ -1,0 +1,520 @@
+﻿@model ECommerce.Web.ViewModels.ProductCatalogViewModel
+
+@{
+    ViewData["Title"] = "Products";
+}
+
+<div class="container mt-5">
+
+    <!-- Header -->
+    <div class="text-center mb-5">
+
+        <h1 class="display-5 fw-bold">
+            Our Products
+        </h1>
+
+        <p class="text-muted">
+            Browse our latest collection.
+        </p>
+
+    </div>
+
+
+    <!-- Search / Filter -->
+    <form method="get"
+          asp-action="Index"
+          class="row g-3 mb-5">
+
+        <div class="col-md-5">
+
+            <input asp-for="Search"
+                   class="form-control"
+                   placeholder="Search products..." />
+
+        </div>
+
+        <div class="col-md-3">
+
+            <select asp-for="SortBy"
+                    class="form-select">
+
+                <option value="">
+                    Newest
+                </option>
+
+                <option value="name">
+                    Name
+                </option>
+
+                <option value="priceAsc">
+                    Price ↑
+                </option>
+
+                <option value="priceDesc">
+                    Price ↓
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="col-md-2">
+
+            <button type="submit"
+                    class="btn btn-dark w-100">
+
+                Search
+
+            </button>
+
+        </div>
+
+        <div class="col-md-2">
+
+            <a asp-action="Index"
+               class="btn btn-outline-secondary w-100">
+
+                Reset
+
+            </a>
+
+        </div>
+
+    </form>
+
+
+    @if (!Model.Products.Items.Any())
+    {
+        <div class="alert alert-warning text-center">
+
+            No products found.
+
+        </div>
+    }
+    else
+    {
+        <div class="row">
+
+            @foreach (var product in Model.Products.Items)
+            {
+                <div class="col-lg-4 col-md-6 mb-4">
+
+                    <div class="card shadow-sm h-100 position-relative">
+
+                        <!-- DISCOUNT BADGES -->
+                        @if (product.HasAnyDiscount)
+                        {
+                            <div class="position-absolute top-0 start-0 p-2"
+                                 style="z-index: 2;">
+
+                                @if (product.IsOnSale)
+                                {
+                                    <span class="badge bg-danger me-1">
+                                        SALE
+                                    </span>
+                                }
+
+                                @if (product.HasCampaign)
+                                {
+                                    <span class="badge bg-success">
+                                        CAMPAIGN
+                                    </span>
+                                }
+
+                            </div>
+                        }
+
+
+                        <!-- Product Image -->
+                        @{
+                            var displayImage = string.IsNullOrWhiteSpace(product.ThumbnailUrl)
+                            ? product.ImageUrl
+                            : product.ThumbnailUrl;
+                        }
+                        @if (string.IsNullOrWhiteSpace(displayImage))
+                        {
+                            <img src="https://placehold.co/600x400?text=No+Image"
+                                 class="card-img-top"
+                                 alt="No Image" />
+                        }
+                        else
+                        {
+                            <img src="@displayImage"
+                                 class="card-img-top"
+                                 alt="@product.Name" />
+                        }
+
+                        <div class="card-body">
+
+                            <!-- Category -->
+                            <p class="text-muted mb-1">
+                                @product.CategoryName
+                            </p>
+
+
+                            <!-- Product Name -->
+                            <h5 class="card-title">
+                                @product.Name
+                            </h5>
+
+
+                            <!-- Rating -->
+                            @if (product.ReviewCount > 0)
+                            {
+                                <div class="small text-warning mb-2">
+
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="bi @(i <= Math.Round(product.AverageRating)
+                                                                                       ? "bi-star-fill"
+                                                                                       : "bi-star")">
+                        </i>
+                                                }
+
+                                    <span class="text-muted">
+                                        (@product.ReviewCount)
+                                    </span>
+
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="small text-muted mb-2">
+                                    No reviews yet
+                                </div>
+                            }
+
+
+                            <!-- =============================== -->
+                            <!-- PRICE SECTION -->
+                            <!-- =============================== -->
+                            @if (product.HasAnyDiscount)
+                            {
+                                <!-- Original Price -->
+                                <div>
+
+                                    <span class="text-muted text-decoration-line-through">
+
+                                        @product.Price.ToString("C")
+
+                                    </span>
+
+                                </div>
+
+
+                                <!-- Final Price -->
+                                <div>
+
+                                    <span class="text-danger fw-bold fs-4">
+
+                                        @product.FinalPrice.ToString("C")
+
+                                    </span>
+
+                                </div>
+
+
+                                <!-- Discount -->
+                                <div class="mt-1">
+
+                                    <span class="badge bg-danger">
+
+                                        Save
+                                        @product.TotalDiscountAmount.ToString("C")
+
+                                    </span>
+
+                                    @if (product.TotalDiscountPercentage > 0)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+
+                                            @product.TotalDiscountPercentage% OFF
+
+                                        </span>
+                                    }
+
+                                </div>
+
+
+                                <!-- Sale information -->
+                                @if (product.IsOnSale &&
+                                                    product.HasCampaign)
+                                {
+                                    <div class="small text-muted mt-2">
+
+                                        Sale + Campaign applied
+
+                                    </div>
+                                }
+                                else if (product.IsOnSale)
+                                {
+                                    <div class="small text-danger mt-2">
+
+                                        Sale price
+
+                                    </div>
+                                }
+
+
+                                <!-- Campaign information -->
+                                @if (product.HasCampaign &&
+                                                    !string.IsNullOrWhiteSpace(product.CampaignName))
+                                {
+                                    <div class="small text-success mt-1">
+
+                                        @product.CampaignName
+
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <!-- Normal Price -->
+
+                                <h4 class="text-primary">
+
+                                    @product.Price.ToString("C")
+
+                                </h4>
+                            }
+
+                        </div>
+
+
+                        <!-- Actions -->
+                        <div class="card-footer bg-white border-0">
+
+                            <div class="d-grid gap-2">
+
+                                <a asp-controller="Products"
+                                   asp-action="Details"
+                                   asp-route-id="@product.Id"
+                                   class="btn btn-dark">
+
+                                    View Details
+
+                                </a>
+
+
+                                <a asp-controller="Cart"
+                                   asp-action="Add"
+                                   asp-route-id="@product.Id"
+                                   class="btn btn-success">
+
+                                    Add to Cart
+
+                                </a>
+
+
+                                @{
+                                    var isWishlisted =
+                                    Model.WishlistedProductIds.Contains(
+                                    product.Id);
+                                }
+
+                                <button type="button"
+                                        data-product-id="@product.Id"
+                                        class="btn @(isWishlisted
+                                                                                    ? "btn-danger"
+                                                                                    : "btn-outline-secondary")"
+                                                                                                              onclick="toggleWishlistCard(this)">
+
+                                    <span class="wl-icon">
+                                        @(isWishlisted ? "❤️" : "🤍")
+                                    </span>
+
+                                    <span class="wl-text">
+                                        @(isWishlisted
+                                                                        ? "Remove from Wishlist"
+                                                                        : "Add to Wishlist")
+                            </span>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+                }
+
+        </div>
+
+
+        <!-- Pagination -->
+        @if (Model.Products.TotalPages > 1)
+        {
+            <nav class="mt-5">
+
+                <ul class="pagination justify-content-center">
+
+                    <li class="page-item @(Model.Products.HasPreviousPage
+                                                ? ""
+                                                : "disabled")">
+
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-page="@(Model.Products.Page - 1)"
+                   asp-route-search="@Model.Search"
+                   asp-route-sortBy="@Model.SortBy">
+
+                            Previous
+
+                        </a>
+
+                    </li>
+
+
+            @for (int i = 1;
+                        i <= Model.Products.TotalPages;
+                        i++)
+                    {
+                        <li class="page-item @(i == Model.Products.Page
+                                                        ? "active"
+                                                        : "")">
+
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-page="@i"
+                   asp-route-search="@Model.Search"
+                   asp-route-sortBy="@Model.SortBy">
+
+                                @i
+
+                            </a>
+
+                        </li>
+                        }
+
+
+                    <li class="page-item @(Model.Products.HasNextPage
+                                                ? ""
+                                                : "disabled")">
+
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-page="@(Model.Products.Page + 1)"
+                   asp-route-search="@Model.Search"
+                   asp-route-sortBy="@Model.SortBy">
+
+                            Next
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </nav>
+        }
+    }
+
+</div>
+
+
+@section Scripts {
+
+    <script>
+
+        async function toggleWishlistCard(btn) {
+
+            const productId = btn.dataset.productId;
+
+            btn.disabled = true;
+
+            try {
+
+                const response = await fetch(
+                    '/Wishlist/ToggleAjax',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded'
+                        },
+                        body: `productId=${productId}`
+                    }
+                );
+
+
+                if (response.status === 401) {
+
+                    window.location.href =
+                        '/Account/Login?returnUrl=' +
+                        encodeURIComponent(
+                            window.location.pathname
+                        );
+
+                    return;
+                }
+
+
+                const data = await response.json();
+
+                const icon =
+                    btn.querySelector('.wl-icon');
+
+                const text =
+                    btn.querySelector('.wl-text');
+
+
+                if (data.success) {
+
+                    if (data.isWishlisted) {
+
+                        icon.textContent = '❤️';
+
+                        text.textContent =
+                            'Remove from Wishlist';
+
+                        btn.classList.replace(
+                            'btn-outline-secondary',
+                            'btn-danger'
+                        );
+
+                    }
+                    else {
+
+                        icon.textContent = '🤍';
+
+                        text.textContent =
+                            'Add to Wishlist';
+
+                        btn.classList.replace(
+                            'btn-danger',
+                            'btn-outline-secondary'
+                        );
+                    }
+
+
+                    updateWishlistBadge(
+                        data.isWishlisted
+                    );
+
+                }
+                else {
+
+                    alert(
+                        data.message ||
+                        'Something went wrong.'
+                    );
+                }
+
+            }
+            catch (err) {
+
+                alert(
+                    'Network error, please try again.'
+                );
+
+            }
+            finally {
+
+                btn.disabled = false;
+            }
+        }
+
+    </script>
+}

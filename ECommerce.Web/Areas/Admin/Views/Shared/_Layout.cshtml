@@ -1,0 +1,268 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - Admin Panel</title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/admin-dashboard.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+</head>
+
+<body>
+
+    <div class="container-fluid">
+
+        <div class="row">
+
+            <!-- Sidebar -->
+
+            <div class="col-md-2 bg-dark text-white min-vh-100 p-3">
+
+                <h3 class="mb-4">
+                    🛒 Admin
+                </h3>
+
+                <hr class="bg-light" />
+
+                <ul class="nav flex-column">
+
+                    <!-- Dashboard -->
+                    <li class="nav-item mb-2">
+                        <a asp-area="Admin"
+                           asp-controller="Dashboard"
+                           asp-action="Index"
+                           class="nav-link text-white">
+
+                            📊 Dashboard
+
+                        </a>
+                    </li>
+
+                    <!-- Products -->
+                    <li class="nav-item mb-2">
+                        <a asp-area="Admin"
+                           asp-controller="Products"
+                           asp-action="Index"
+                           class="nav-link text-white">
+
+                            📦 Products
+
+                        </a>
+                    </li>
+
+                    <!-- Categories -->
+                    <li class="nav-item mb-2">
+                        <a asp-area="Admin"
+                           asp-controller="Categories"
+                           asp-action="Index"
+                           class="nav-link text-white">
+
+                            📂 Categories
+
+                        </a>
+                    </li>
+
+                    <!-- Orders -->
+                    <li class="nav-item mb-2">
+                        <a asp-area="Admin"
+                           asp-controller="Orders"
+                           asp-action="Index"
+                           class="nav-link text-white">
+
+                            📋 Orders
+
+                        </a>
+                    </li>
+
+                    <!-- Delivery Methods (Phase 18: Shipping) -->
+                    <li class="nav-item mb-2">
+                        <a asp-area="Admin"
+                           asp-controller="DeliveryMethods"
+                           asp-action="Index"
+                           class="nav-link text-white">
+
+                            🚚 Delivery Methods
+
+                        </a>
+                    </li>
+
+                    <!-- Payments -->
+                    <li class="nav-item mb-2">
+                        <a asp-area="Admin"
+                           asp-controller="Payments"
+                           asp-action="Index"
+                           class="nav-link text-white">
+
+                            💳 Payments
+
+                        </a>
+                    </li>
+
+                    <li class="nav-item mb-2">
+                        <a asp-area="Admin"
+                           asp-controller="RefundRequests"
+                           asp-action="Index"
+                           class="nav-link text-white">
+
+                            💸 Refund Requests
+
+                        </a>
+                    </li>
+
+                    <!-- Coupons -->
+                    <li class="nav-item mb-2">
+                        <a asp-area="Admin"
+                           asp-controller="Coupons"
+                           asp-action="Index"
+                           class="nav-link text-white">
+
+                            🎟️ Coupons
+
+                        </a>
+                    </li>
+
+                    <li class="nav-item mb-2">
+                    <a asp-area="Admin" 
+                        asp-controller="AuditLogs" 
+                        asp-action="Index"
+                           class="nav-link text-white">
+
+                        🧾 Audit Logs
+
+                    </a>
+
+                    </li>
+
+                    <!-- Campaigns -->
+                    <li class="nav-item mb-2">
+                        <a asp-area="Admin"
+                           asp-controller="Campaigns"
+                           asp-action="Index"
+                           class="nav-link text-white">
+
+                            🏷️ Campaigns
+
+                        </a>
+                    </li>
+
+                    <!-- Users -->
+                    <li class="nav-item mb-2">
+                        <a asp-area="Admin"
+                           asp-controller="Users"
+                           asp-action="Index"
+                           class="nav-link text-white">
+
+                            👥 Users
+
+                        </a>
+                    </li>
+
+                    <!-- Reviews -->
+                    <li class="nav-item mb-2">
+                        <a asp-area="Admin"
+                           asp-controller="Reviews"
+                           asp-action="Index"
+                           class="nav-link text-white">
+
+                            ⭐ Reviews
+
+                        </a>
+                    </li>
+
+                    <hr />
+
+                    <!-- Back to Store -->
+                    <li class="nav-item">
+
+                        <a asp-area=""
+                           asp-controller="Home"
+                           asp-action="Index"
+                           class="nav-link text-warning">
+
+                            🌐 Back to Store
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <!-- Main Content -->
+
+            <div class="col-md-10">
+
+                <nav class="navbar navbar-light bg-light shadow-sm mb-4">
+
+                    <div class="container-fluid">
+
+                        <span class="navbar-brand">
+                            Admin Dashboard
+                        </span>
+
+                    </div>
+
+                </nav>
+
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show"
+                         role="alert">
+
+                        @TempData["Success"]
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert">
+                        </button>
+
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show"
+                         role="alert">
+
+                        @TempData["Error"]
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert">
+                        </button>
+
+                    </div>
+                }
+
+                @RenderBody()
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

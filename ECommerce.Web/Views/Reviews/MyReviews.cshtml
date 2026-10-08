@@ -1,0 +1,46 @@
+﻿@model List<ECommerce.Web.DTOs.ReviewDto>
+
+@{
+    ViewData["Title"] = "My Reviews";
+}
+
+<div class="container mt-5">
+    <h2 class="fw-bold mb-4">My Reviews</h2>
+
+    @if (TempData["ReviewSuccess"] != null)
+    {
+        <div class="alert alert-success">@TempData["ReviewSuccess"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">You haven't written any reviews yet.</p>
+    }
+
+    @foreach (var r in Model)
+    {
+        <div class="border-bottom py-3 d-flex justify-content-between align-items-start">
+            <div>
+                <div class="mb-1">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <i class="bi @(i <= r.Rating ? "bi-star-fill text-warning" : "bi-star text-muted")"></i>
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(r.Title))
+                {
+                    <h6>@r.Title</h6>
+                }
+                <p class="mb-1">@r.Comment</p>
+                <div class="text-muted small">@r.CreatedAt.ToString("MMM dd, yyyy")</div>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-controller="Products" asp-action="Details" asp-route-id="@r.ProductId" class="btn btn-sm btn-outline-secondary">View Product</a>
+                <form asp-action="Delete" method="post" onsubmit="return confirm('Delete this review?');">
+                    <input type="hidden" name="id" value="@r.Id" />
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    }
+</div>

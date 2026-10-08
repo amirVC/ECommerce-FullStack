@@ -1,0 +1,296 @@
+﻿@model List<ECommerce.Web.ViewModels.WishlistItemViewModel>
+
+@{
+    ViewData["Title"] = "My Wishlist";
+}
+
+<h2 class="mb-4">My Wishlist</h2>
+
+@if (!Model.Any())
+{
+    <p>
+        Your wishlist is empty.
+        <a asp-controller="Products"
+           asp-action="Index">
+            Browse products
+        </a>
+    </p>
+}
+else
+{
+    <div class="row">
+
+        @foreach (var item in Model)
+        {
+            <div class="col-lg-4 col-md-6 mb-4">
+
+                <div class="card shadow-sm h-100 position-relative">
+
+                    <!-- DISCOUNT BADGES -->
+                    @if (item.HasAnyDiscount)
+                    {
+                        <div class="position-absolute top-0 start-0 p-2"
+                             style="z-index: 2;">
+
+                            @if (item.IsOnSale)
+                            {
+                                <span class="badge bg-danger me-1">
+                                    SALE
+                                </span>
+                            }
+
+                            @if (item.HasCampaign)
+                            {
+                                <span class="badge bg-success">
+                                    CAMPAIGN
+                                </span>
+                            }
+
+                        </div>
+                    }
+
+
+                    <!-- Product Image -->
+                    @{
+                        var wlImage = string.IsNullOrWhiteSpace(item.ThumbnailUrl)
+                        ? item.ImageUrl
+                        : item.ThumbnailUrl;
+                    }
+                    <div class="overflow-hidden rounded-top-4 bg-light
+                            d-flex align-items-center justify-content-center p-2"
+                         style="height: 250px;">
+
+                        @if (string.IsNullOrWhiteSpace(wlImage))
+                        {
+                            <img src="https://placehold.co/600x400?text=No+Image"
+                                 class="card-img-top"
+                                 alt="No Image"
+                                 style="max-width:100%;
+                                            max-height:100%;
+                                            object-fit:contain;"
+                                 loading="lazy" />
+                        }
+                        else
+                        {
+                            <img src="@wlImage"
+                                 class="card-img-top"
+                                 alt="@item.ProductName"
+                                 style="max-width:100%;
+                                            max-height:100%;
+                                            object-fit:contain;"
+                                 loading="lazy" />
+                        }
+
+                    </div>
+                    <div class="card-body d-flex flex-column">
+
+                        <!-- Product Name -->
+
+                        <h5 class="card-title">
+                            @item.ProductName
+                        </h5>
+
+
+                        <!-- PRICE -->
+
+                        <div class="mt-3">
+
+                            @if (item.HasAnyDiscount)
+                            {
+                                <!-- Original Price -->
+
+                                <div>
+                                    <span class="text-muted
+                                                             text-decoration-line-through">
+
+                                        @item.Price.ToString("C")
+
+                                    </span>
+                                </div>
+
+
+                                <!-- Final Price -->
+
+                                <div>
+                                    <span class="text-danger
+                                                             fw-bold fs-4">
+
+                                        @item.FinalPrice.ToString("C")
+
+                                    </span>
+                                </div>
+
+
+                                <!-- Discount -->
+
+                                <div class="mt-1">
+
+                                    @if (item.TotalDiscountAmount > 0)
+                                    {
+                                        <span class="badge bg-danger">
+
+                                            Save
+                                            @item.TotalDiscountAmount.ToString("C")
+
+                                        </span>
+                                    }
+
+                                    @if (item.TotalDiscountPercentage > 0)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+
+                                            @item.TotalDiscountPercentage% OFF
+
+                                        </span>
+                                    }
+
+                                </div>
+
+
+                                <!-- Sale Discount -->
+                                @if (item.SaleDiscountAmount > 0)
+                                {
+                                    <div class="small text-danger mt-2">
+
+                                        Sale:
+                                        -@item.SaleDiscountAmount.ToString("C")
+
+                                    </div>
+                                }
+
+
+                                <!-- Campaign Discount -->
+                                @if (item.CampaignDiscountAmount > 0)
+                                {
+                                    <div class="small text-success mt-1">
+
+                                        Campaign:
+                                        -@item.CampaignDiscountAmount.ToString("C")
+
+                                    </div>
+                                }
+
+
+                                <!-- Campaign Name -->
+                                @if (item.HasCampaign &&
+                                                    !string.IsNullOrWhiteSpace(
+                                                    item.CampaignName))
+                                {
+                                    <div class="small text-success mt-2">
+
+                                        @item.CampaignName
+
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <!-- Normal Price -->
+
+                                <span class="text-primary
+                                                         fw-bold fs-4">
+
+                                    @item.Price.ToString("C")
+
+                                </span>
+                            }
+
+                        </div>
+
+
+                        <!-- Stock -->
+                        @if (item.InStock)
+                        {
+                            <p class="text-success mt-2 mb-3">
+
+                                ✔ In Stock
+
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="text-danger mt-2 mb-3">
+
+                                ✖ Out of Stock
+
+                            </p>
+                        }
+
+
+                    <!-- Actions -->
+
+                    <div class="mt-auto d-flex gap-2">
+
+                        <form asp-action="MoveToCart"
+                              method="post"
+                              class="flex-grow-1">
+
+                            <input type="hidden"
+                                   name="wishlistItemId"
+                                   value="@item.Id" />
+
+                            <input type="hidden"
+                                   name="productId"
+                                   value="@item.ProductId" />
+
+                            <button type="submit"
+                                    class="btn btn-primary
+                                                   btn-sm w-100"
+                                    @(item.InStock
+                                                                    ? ""
+                                                                    : "disabled")>
+
+                            Move to Cart
+
+                                </button>
+
+                            </form>
+
+
+                            <a asp-action="Remove"
+                               asp-route-id="@item.Id"
+                               class="btn btn-outline-danger btn-sm">
+
+                                Remove
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+
+    <a asp-action="Clear"
+       class="btn btn-outline-secondary mt-2"
+       onclick="return confirm('Clear your entire wishlist?');">
+
+        Clear Wishlist
+
+    </a>
+}
+
+
+<style>
+
+    .card {
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.1) !important;
+        }
+
+    .rounded-top-4 {
+        border-top-left-radius: 0.75rem;
+        border-top-right-radius: 0.75rem;
+    }
+
+</style>

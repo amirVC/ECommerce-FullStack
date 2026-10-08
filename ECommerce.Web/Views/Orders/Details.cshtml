@@ -1,0 +1,244 @@
+﻿@model ECommerce.Web.DTOs.OrderResponseDto
+@{
+    ViewData["Title"] = "Order Details";
+    var refundRequest = ViewBag.RefundRequest as ECommerce.Web.DTOs.RefundRequestDto;
+    var shipment = ViewBag.Shipment as ECommerce.Web.DTOs.ShipmentDto;
+
+    string PaymentBadgeClass(string? status) => status?.ToLower() switch
+    {
+        "paid" => "bg-success",
+        "pending" => "bg-warning text-dark",
+        "failed" => "bg-danger",
+        "refunded" => "bg-secondary",
+        "partiallyrefunded" => "bg-secondary",
+        "canceled" => "bg-dark",
+        _ => "bg-secondary"
+    };
+
+    string DisplayOrderStatus(string? orderStatus, string? paymentStatus)
+    {
+        if (string.Equals(paymentStatus, "Paid", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(orderStatus, "Processing", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Paid & Processing";
+        }
+        return orderStatus ?? string.Empty;
+    }
+
+    string RefundBadgeClass(string? status) => status?.ToLower() switch
+    {
+        "pending" => "bg-warning text-dark",
+        "approved" => "bg-success",
+        "rejected" => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    string ShipmentBadgeClass(string? status) => status?.ToLower() switch
+    {
+        "processing" => "bg-secondary",
+        "shipped" => "bg-info text-dark",
+        "intransit" => "bg-primary",
+        "delivered" => "bg-success",
+        "failedattempt" => "bg-danger",
+        "returned" => "bg-dark",
+        _ => "bg-secondary"
+    };
+
+    string? TrackingUrl(string? carrier, string? trackingNumber)
+    {
+        if (string.IsNullOrWhiteSpace(carrier) || string.IsNullOrWhiteSpace(trackingNumber))
+            return null;
+
+        return carrier.Trim().ToLower() switch
+        {
+            "ups" => $"https://www.ups.com/track?tracknum={trackingNumber}",
+            "fedex" => $"https://www.fedex.com/fedextrack/?trknbr={trackingNumber}",
+            "usps" => $"https://tools.usps.com/go/TrackConfirmAction?tLabels={trackingNumber}",
+            "dhl" => $"https://www.dhl.com/en/express/tracking.html?AWB={trackingNumber}",
+            _ => null
+        };
+    }
+}
+<div class="container mt-5">
+
+    @if (TempData["RefundRequestSuccess"] != null)
+    {
+        <div class="alert alert-success">@TempData["RefundRequestSuccess"]</div>
+    }
+    @if (TempData["RefundRequestError"] != null)
+    {
+        <div class="alert alert-danger">@TempData["RefundRequestError"]</div>
+    }
+
+    <h2 class="mb-4">
+        Order #@Model.Id
+    </h2>
+    <div class="card mb-4">
+        <div class="card-body">
+            <p><strong>Date:</strong> @Model.OrderDate</p>
+            <p>
+                <strong>Status:</strong>
+                <span class="badge bg-success">
+                    @DisplayOrderStatus(Model.Status, Model.PaymentStatus)
+                </span>
+            </p>            <p>
+                <strong>Payment Status:</strong>
+                <span class="badge @PaymentBadgeClass(Model.PaymentStatus)">
+                    @Model.PaymentStatus
+                </span>
+            </p>
+            <p><strong>Payment Method:</strong> @Model.PaymentMethod</p>
+            <p><strong>Total:</strong> $@Model.TotalAmount</p>
+            <p><strong>Customer:</strong> @Model.CustomerName</p>
+            <p><strong>Email:</strong> @Model.Email</p>
+            <p><strong>Phone:</strong> @Model.PhoneNumber</p>
+            <p><strong>Address:</strong> @Model.ShippingAddress</p>
+        </div>
+    </div>
+
+    @if (string.Equals(Model.PaymentStatus, "Pending", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(Model.PaymentMethod, "Card", StringComparison.OrdinalIgnoreCase))
+    {
+        <div class="alert alert-warning d-flex justify-content-between align-items-center">
+            <span>This order is awaiting payment.</span>
+            <a asp-controller="Checkout" asp-action="Pay" asp-route-orderId="@Model.Id"
+               class="btn btn-sm btn-warning">
+                Complete Payment
+            </a>
+        </div>
+    }
+
+    @if (shipment != null)
+    {
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Shipment Tracking</span>
+                <span class="badge @ShipmentBadgeClass(shipment.Status)">@shipment.Status</span>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrWhiteSpace(shipment.Carrier))
+                {
+                    <p class="mb-1"><strong>Carrier:</strong> @shipment.Carrier</p>
+                }
+                @if (!string.IsNullOrWhiteSpace(shipment.TrackingNumber))
+                {
+                    var url = TrackingUrl(shipment.Carrier, shipment.TrackingNumber);
+                    <p class="mb-1">
+                        <strong>Tracking Number:</strong>
+                        @if (url != null)
+                        {
+                            <a href="@url" target="_blank" rel="noopener">@shipment.TrackingNumber</a>
+                        }
+                        else
+                        {
+                            @shipment.TrackingNumber
+                        }
+                    </p>
+                }
+                @if (shipment.ShippedAt != null)
+                {
+                    <p class="mb-1"><strong>Shipped:</strong> @shipment.ShippedAt.Value.ToString("yyyy-MM-dd")</p>
+                }
+                @if (shipment.DeliveredAt != null)
+                {
+                    <p class="mb-1"><strong>Delivered:</strong> @shipment.DeliveredAt.Value.ToString("yyyy-MM-dd")</p>
+                }
+
+                @if (shipment.History.Any())
+                {
+                    <hr />
+                    <h6>Status History</h6>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var h in shipment.History.OrderByDescending(x => x.ChangedAt))
+                        {
+                            <li class="list-group-item px-0">
+                                <span class="badge @ShipmentBadgeClass(h.Status) me-2">@h.Status</span>
+                                <span class="text-muted small">@h.ChangedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                                @if (!string.IsNullOrWhiteSpace(h.Note))
+                                {
+                                    <div class="small">@h.Note</div>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    }
+    else if (string.Equals(Model.PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase))
+    {
+        <div class="alert alert-light border">
+            Your order is being prepared. Tracking details will appear here once it ships.
+        </div>
+    }
+
+    @if (string.Equals(Model.PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase))
+    {
+        <div class="card mb-4">
+            <div class="card-header">Refund</div>
+            <div class="card-body">
+
+                @if (refundRequest == null)
+                {
+                    <form asp-action="RequestRefund" method="post">
+                        <input type="hidden" name="orderId" value="@Model.Id" />
+                        <div class="mb-2">
+                            <label class="form-label">Why would you like a refund?</label>
+                            <textarea name="reason" class="form-control" rows="2" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            Request Refund
+                        </button>
+                    </form>
+                }
+                else if (string.Equals(refundRequest.Status, "Pending", StringComparison.OrdinalIgnoreCase))
+                {
+                    <p class="mb-1">
+                        <span class="badge @RefundBadgeClass(refundRequest.Status)">Pending Review</span>
+                    </p>
+                    <p class="text-muted small mb-0">
+                        Requested on @refundRequest.RequestedAt.ToString("yyyy-MM-dd") — "@refundRequest.Reason"
+                    </p>
+                }
+                else
+                {
+                    <p class="mb-1">
+                        <span class="badge @RefundBadgeClass(refundRequest.Status)">@refundRequest.Status</span>
+                    </p>
+                    @if (!string.IsNullOrWhiteSpace(refundRequest.AdminNote))
+                    {
+                        <p class="text-muted small mb-0">Admin note: @refundRequest.AdminNote</p>
+                    }
+                }
+
+            </div>
+        </div>
+    }
+
+    <h4>Items</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.ProductName</td>
+                    <td>@item.Quantity</td>
+                    <td>$@item.UnitPrice</td>
+                    <td>$@item.Subtotal</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Back to Orders
+    </a>
+</div>

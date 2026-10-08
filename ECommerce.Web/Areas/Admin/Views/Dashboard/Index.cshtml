@@ -1,0 +1,122 @@
+﻿@model ECommerce.Web.DTOs.DashboardResponseDto
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Dashboard";
+}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1">Dashboard</h2>
+            <p class="text-muted mb-0">Welcome back, Administrator 👋</p>
+        </div>
+        <div class="text-muted small">
+            @DateTime.Now.ToString("dddd, MMMM d, yyyy")
+        </div>
+    </div>
+
+    <!-- KPI -->
+    @await Html.PartialAsync("Partials/_KpiCards", Model)
+
+    <!-- Main Dashboard -->
+    <div class="row g-4 mt-1">
+        <!-- LEFT -->
+        <div class="col-xl-8">
+            @await Html.PartialAsync("Partials/_RevenueChart", Model.MonthlySales)
+        </div>
+        <!-- RIGHT -->
+        <div class="col-xl-4">
+            @await Html.PartialAsync("Partials/_TopSellingProducts", Model.TopSellingProducts)
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-xl-8">
+            @await Html.PartialAsync("Partials/_RecentOrders", Model.RecentOrders)
+        </div>
+        <div class="col-xl-4">
+            @await Html.PartialAsync("Partials/_RecentActivities", Model.RecentActivities)
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-xl-8">
+            @await Html.PartialAsync("Partials/_LowStockProducts", Model.LowStockProducts)
+        </div>
+        <div class="col-xl-4">
+            @await Html.PartialAsync("Partials/_QuickActions")
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        const labels = [
+        @foreach (var item in Model.MonthlySales)
+        {
+                <text>"@item.MonthName",</text>
+        }
+        ];
+        const data = [
+        @foreach (var item in Model.MonthlySales)
+        {
+                <text>@item.Revenue,</text>
+        }
+        ];
+
+        const ctx = document.getElementById("salesChart");
+        const gradient = ctx.getContext("2d").createLinearGradient(0, 0, 0, 340);
+        gradient.addColorStop(0, "rgba(54, 84, 243, 0.25)");
+        gradient.addColorStop(1, "rgba(54, 84, 243, 0)");
+
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Revenue",
+                        data: data,
+                        borderColor: "#3654F3",
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        pointBackgroundColor: "#3654F3",
+                        pointBorderColor: "#fff",
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: "index" },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: "#10132B",
+                        padding: 12,
+                        cornerRadius: 10,
+                        titleFont: { family: "Sora", weight: "700" },
+                        bodyFont: { family: "Inter" }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: "#8992A9", font: { family: "Inter" } }
+                    },
+                    y: {
+                        grid: { color: "#EFF2F8" },
+                        ticks: { color: "#8992A9", font: { family: "Inter" } }
+                    }
+                }
+            }
+        });
+    </script>
+}
+

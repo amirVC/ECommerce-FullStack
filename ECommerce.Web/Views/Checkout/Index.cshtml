@@ -1,0 +1,502 @@
+﻿@model ECommerce.Web.ViewModels.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Checkout";
+
+    var cart = ViewBag.Cart as ECommerce.Web.ViewModels.CartViewModel;
+
+    var shippingCost = ViewBag.ShippingCost != null
+        ? (decimal)ViewBag.ShippingCost
+        : 0m;
+
+    var freeShippingThreshold = ViewBag.FreeShippingThreshold != null
+        ? (decimal)ViewBag.FreeShippingThreshold
+        : 0m;
+
+    var cartTotal = cart?.Total ?? 0m;
+
+    var remainingForFreeShipping =
+        Math.Max(0m, freeShippingThreshold - cartTotal);
+
+    var finalShippingCost =
+        cart?.FreeShippingApplied == true
+            ? 0m
+            : shippingCost;
+
+    var finalTotal = cartTotal + finalShippingCost;
+
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+}
+
+<div class="container mt-5 mb-5">
+
+    <div class="row g-4">
+
+        <!-- ========================= -->
+        <!-- CHECKOUT FORM -->
+        <!-- ========================= -->
+
+        <div class="col-md-7">
+
+            <h2 class="mb-4">
+                Checkout
+            </h2>
+
+            <form asp-controller="Checkout"
+                  asp-action="Index"
+                  method="post">
+
+                <!-- ========================= -->
+                <!-- SHIPPING ADDRESS -->
+                <!-- ========================= -->
+
+                <div class="card shadow-sm mb-3">
+
+                    <div class="card-header fw-semibold">
+                        Shipping Address
+                    </div>
+
+                    <div class="card-body">
+
+                        @if (Model.AvailableAddresses == null ||
+                                                !Model.AvailableAddresses.Any())
+                        {
+                            <p class="text-muted mb-3">
+                                You don't have a saved address yet.
+                            </p>
+
+                            <a asp-controller="Addresses"
+                               asp-action="Create"
+                               asp-route-returnUrl="@Url.Action("Index", "Checkout")"
+                               class="btn btn-outline-primary">
+                                Add a New Address
+                            </a>
+                        }
+                        else
+                        {
+                            @foreach (var address in Model.AvailableAddresses)
+                            {
+                                <div class="form-check border rounded p-3 mb-2">
+
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="AddressId"
+                                           id="address-@address.Id"
+                                           value="@address.Id"
+                                           checked="@(Model.AddressId == address.Id)" />
+
+                                    <label class="form-check-label"
+                                           for="address-@address.Id">
+
+                                        <strong>
+                                            @address.FullName
+                                        </strong>
+
+                                        <span class="text-muted">
+                                            — @address.Phone
+                                        </span>
+
+                                        <br />
+
+                                        @address.Line1
+
+                                        @if (!string.IsNullOrWhiteSpace(address.Line2))
+                                        {
+                                            <span>
+                                                , @address.Line2
+                                            </span>
+                                        }
+
+                                        <br />
+
+                                        @address.City
+
+                                        @if (!string.IsNullOrWhiteSpace(address.State))
+                                        {
+                                            <span>
+                                                , @address.State
+                                            </span>
+                                        }
+
+                                        @if (!string.IsNullOrWhiteSpace(address.PostalCode))
+                                        {
+                                            <span>
+                                                @address.PostalCode
+                                            </span>
+                                        }
+
+                                        <br />
+
+                                        @address.Country
+
+                                    </label>
+
+                                </div>
+                            }
+
+                            <a asp-controller="Addresses"
+                               asp-action="Create"
+                               asp-route-returnUrl="@Url.Action("Index", "Checkout")"
+                               class="small">
+                                + Add a new address
+                            </a>
+                        }
+
+                        <span asp-validation-for="AddressId"
+                              class="text-danger d-block mt-2">
+                        </span>
+
+                    </div>
+                </div>
+
+
+                <!-- ========================= -->
+                <!-- DELIVERY METHOD -->
+                <!-- ========================= -->
+
+                <div class="card shadow-sm mb-3">
+
+                    <div class="card-header fw-semibold">
+                        Delivery Method
+                    </div>
+
+                    <div class="card-body">
+
+                        @if (Model.AvailableDeliveryMethods == null ||
+                                                !Model.AvailableDeliveryMethods.Any())
+                        {
+                            <p class="text-muted">
+                                No delivery methods are currently available.
+                            </p>
+                        }
+                        else
+                        {
+                            @foreach (var method in Model.AvailableDeliveryMethods)
+                            {
+                                <div class="form-check border rounded p-3 mb-2">
+
+                                    <input class="form-check-input delivery-method-radio"
+                                           type="radio"
+                                           name="DeliveryMethodId"
+                                           id="method-@method.Id"
+                                           value="@method.Id"
+                                           data-price="@method.Price.ToString("F2", inv)"
+                                           checked="@(Model.DeliveryMethodId == method.Id)" />
+
+                                    <label class="form-check-label w-100"
+                                           for="method-@method.Id">
+
+                                        <div class="d-flex justify-content-between align-items-center">
+
+                                            <span>
+
+                                                <strong>
+                                                    @method.Name
+                                                </strong>
+
+                                                <span class="text-muted">
+                                                    —
+                                                    @method.EstimatedDaysMin
+                                                    –
+                                                    @method.EstimatedDaysMax
+                                                    business days
+                                                </span>
+
+                                            </span>
+
+                                            <span class="fw-semibold">
+                                                @method.Price.ToString("C")
+                                            </span>
+
+                                        </div>
+
+                                    </label>
+
+                                </div>
+                            }
+                        }
+
+                        <span asp-validation-for="DeliveryMethodId"
+                              class="text-danger d-block mt-2">
+                        </span>
+
+                    </div>
+                </div>
+
+
+                <!-- ========================= -->
+                <!-- PAYMENT METHOD -->
+                <!-- ========================= -->
+
+                <div class="card shadow-sm mb-3">
+
+                    <div class="card-header fw-semibold">
+                        Payment Method
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="form-check mb-2">
+
+                            <input class="form-check-input"
+                                   type="radio"
+                                   asp-for="PaymentMethod"
+                                   id="payCash"
+                                   value="Cash"
+                                   checked="@(Model.PaymentMethod != "Card")" />
+
+                            <label class="form-check-label"
+                                   for="payCash">
+
+                                Cash on Delivery
+
+                            </label>
+
+                        </div>
+
+
+                        <div class="form-check">
+
+                            <input class="form-check-input"
+                                   type="radio"
+                                   asp-for="PaymentMethod"
+                                   id="payCard"
+                                   value="Card"
+                                   checked="@(Model.PaymentMethod == "Card")" />
+
+                            <label class="form-check-label"
+                                   for="payCard">
+
+                                Credit / Debit Card
+
+                            </label>
+
+                        </div>
+
+                        <span asp-validation-for="PaymentMethod"
+                              class="text-danger d-block mt-2">
+                        </span>
+
+                    </div>
+                </div>
+
+
+                <!-- ========================= -->
+                <!-- CONTINUE -->
+                <!-- ========================= -->
+
+                <button type="submit"
+                        class="btn btn-success btn-lg">
+
+                    Continue
+
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- ========================= -->
+        <!-- ORDER SUMMARY -->
+        <!-- ========================= -->
+        @if (cart != null)
+        {
+            <div class="col-md-5">
+
+                <div class="card shadow-sm"
+                     id="order-summary"
+                     data-cart-total="@cartTotal.ToString("F2", inv)"
+                     data-free-shipping-applied="@(cart.FreeShippingApplied ? "true" : "false")">
+
+                    <div class="card-header fw-bold">
+                        Order Summary
+                    </div>
+
+                    <div class="card-body">
+
+                        <!-- CART ITEMS -->
+                        @foreach (var item in cart.Items)
+                        {
+                            <div class="d-flex justify-content-between small mb-2">
+
+                                <span>
+                                    @item.ProductName × @item.Quantity
+                                </span>
+
+                                <span>
+                                    @item.Total.ToString("C")
+                                </span>
+
+                            </div>
+                        }
+
+                        <hr />
+
+
+                        <!-- SUBTOTAL -->
+
+                        <div class="d-flex justify-content-between">
+
+                            <span>
+                                Subtotal
+                            </span>
+
+                            <span>
+                                @cart.Subtotal.ToString("C")
+                            </span>
+
+                        </div>
+
+
+                        <!-- CAMPAIGN DISCOUNT -->
+                        @if (cart.CampaignDiscountAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between text-success mt-2">
+
+                                <span>
+                                    Campaign Discount
+                                </span>
+
+                                <span>
+                                    -@cart.CampaignDiscountAmount.ToString("C")
+                                </span>
+
+                            </div>
+                        }
+
+
+                        <!-- COUPON DISCOUNT -->
+                        @if (cart.DiscountAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between text-success mt-2">
+
+                                <span>
+
+                                    Coupon Discount
+
+                                    @if (!string.IsNullOrEmpty(cart.AppliedCouponCode))
+                                    {
+                                        <span>
+                                            (@cart.AppliedCouponCode)
+                                        </span>
+                                    }
+
+                                </span>
+
+                                <span>
+                                    -@cart.DiscountAmount.ToString("C")
+                                </span>
+
+                            </div>
+                        }
+
+
+                        <!-- SHIPPING -->
+
+                        <div class="d-flex justify-content-between mt-3">
+
+                            <span>
+                                Shipping
+                            </span>
+
+                            <span id="summary-shipping"
+                                  class="@(cart.FreeShippingApplied || shippingCost == 0 ? "text-success fw-semibold" : "")">
+                                @(cart.FreeShippingApplied || shippingCost == 0 ? "Free" : shippingCost.ToString("C"))
+                            </span>
+
+                        </div>
+
+
+                        <!-- FREE SHIPPING MESSAGE -->
+                        @if (!cart.FreeShippingApplied &&
+                                            shippingCost > 0 &&
+                                            remainingForFreeShipping > 0)
+                        {
+                            <div class="text-muted small mt-1">
+
+                                Add
+
+                                <strong>
+                                    @remainingForFreeShipping.ToString("C")
+                                </strong>
+
+                                more for free shipping.
+
+                            </div>
+                        }
+
+
+                        <hr />
+
+
+                        <!-- FINAL TOTAL -->
+
+                        <div class="d-flex justify-content-between fw-bold fs-5">
+
+                            <span>
+                                Total
+                            </span>
+
+                            <span id="summary-total">
+                                @finalTotal.ToString("C")
+                            </span>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const summaryEl = document.getElementById('order-summary');
+            if (!summaryEl) return;
+
+            const cartTotal = parseFloat(summaryEl.dataset.cartTotal || '0');
+            const freeShippingApplied = summaryEl.dataset.freeShippingApplied === 'true';
+
+            const shippingEl = document.getElementById('summary-shipping');
+            const totalEl = document.getElementById('summary-total');
+
+            function formatCurrency(value) {
+                return '$' + value.toFixed(2);
+            }
+
+            function recalc() {
+                const checked = document.querySelector('.delivery-method-radio:checked');
+                if (!checked) return;
+
+                const methodPrice = parseFloat(checked.dataset.price || '0');
+                const shippingCost = freeShippingApplied ? 0 : methodPrice;
+                const total = cartTotal + shippingCost;
+
+                if (freeShippingApplied || shippingCost === 0) {
+                    shippingEl.textContent = 'Free';
+                    shippingEl.classList.add('text-success', 'fw-semibold');
+                } else {
+                    shippingEl.textContent = formatCurrency(shippingCost);
+                    shippingEl.classList.remove('text-success', 'fw-semibold');
+                }
+
+                totalEl.textContent = formatCurrency(total);
+            }
+
+            document.querySelectorAll('.delivery-method-radio').forEach(radio => {
+                radio.addEventListener('change', recalc);
+            });
+        })();
+    </script>
+
+}

@@ -1,0 +1,348 @@
+﻿@model ECommerce.Web.DTOs.AdminOrderDetailsDto
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Order Details";
+
+    string PaymentBadgeClass(string? status) => status?.ToLower() switch
+    {
+        "paid" => "bg-success",
+        "pending" => "bg-warning text-dark",
+        "failed" => "bg-danger",
+        "refunded" => "bg-secondary",
+        "partiallyrefunded" => "bg-secondary",
+        "canceled" => "bg-dark",
+        _ => "bg-secondary"
+    };
+
+    string ShipmentBadgeClass(string? status) => status?.ToLower() switch
+    {
+        "processing" => "bg-warning text-dark",
+        "shipped" => "bg-info text-dark",
+        "intransit" => "bg-primary",
+        "delivered" => "bg-success",
+        "failedattempt" => "bg-danger",
+        "returned" => "bg-dark",
+        _ => "bg-secondary"
+    };
+
+    var shipment = ViewBag.Shipment as ECommerce.Web.DTOs.ShipmentDto;
+    var shipmentStatuses = new[] { "Processing", "Shipped", "InTransit", "Delivered", "FailedAttempt", "Returned" };
+}
+
+<div class="container-fluid">
+
+    @if (TempData["RefundResult"] != null)
+    {
+        <div class="alert alert-info">@TempData["RefundResult"]</div>
+    }
+
+    @if (TempData["ShipmentResult"] != null)
+    {
+        <div class="alert alert-info">@TempData["ShipmentResult"]</div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2>📋 Order #@Model.Id</h2>
+            <p class="text-muted">
+                @Model.OrderDate.ToString("yyyy-MM-dd HH:mm")
+            </p>
+        </div>
+
+        <a asp-action="Index"
+           class="btn btn-outline-secondary">
+            ← Back
+        </a>
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-lg-4">
+
+            <div class="card shadow-sm mb-4">
+
+                <div class="card-header bg-dark text-white">
+                    Customer
+                </div>
+
+                <div class="card-body">
+
+                    <p><strong>Name:</strong> @Model.CustomerName</p>
+                    <p><strong>Phone:</strong> @Model.PhoneNumber</p>
+
+                    <hr />
+
+                    <p><strong>Address</strong></p>
+
+                    <p>
+                        @Model.Address<br />
+                        @Model.City<br />
+                        @Model.PostalCode<br />
+                        @Model.Country
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="card shadow-sm mb-4">
+
+                <div class="card-header bg-info text-white">
+                    Payment
+                </div>
+
+                <div class="card-body">
+
+                    <p>
+                        <strong>Status:</strong>
+                        <span class="badge @PaymentBadgeClass(Model.PaymentStatus)">
+                            @Model.PaymentStatus
+                        </span>
+                    </p>
+                    <p><strong>Method:</strong> @Model.PaymentMethod</p>
+
+                    @if (string.Equals(Model.PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <form asp-action="Refund" asp-route-id="@Model.Id" method="post"
+                              onsubmit="return confirm('Refund the full amount for this order? This cannot be undone.');">
+                            <div class="mb-2">
+                                <label class="form-label small">Reason (optional)</label>
+                                <input type="text" name="reason" class="form-control form-control-sm" />
+                            </div>
+                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                💸 Refund Full Amount
+                            </button>
+                        </form>
+                    }
+                    else if (string.Equals(Model.PaymentStatus, "Refunded", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(Model.PaymentStatus, "PartiallyRefunded", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <p class="text-muted small mb-0">This payment has already been refunded.</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted small mb-0">No successful payment to refund yet.</p>
+                    }
+
+                </div>
+
+            </div>
+
+            @* ---------------- Phase 18: Shipping ---------------- *@
+            <div class="card shadow-sm mb-4">
+
+                <div class="card-header bg-secondary text-white">
+                    🚚 Shipment
+                </div>
+
+                <div class="card-body">
+
+                    @if (shipment == null)
+                    {
+                        <p class="text-muted small">No shipment created yet.</p>
+
+                        <form asp-action="CreateShipment" asp-route-id="@Model.Id" method="post">
+                            <div class="mb-2">
+                                <label class="form-label small">Carrier</label>
+                                <input type="text" name="carrier" class="form-control form-control-sm" placeholder="e.g. DHL, UPS" />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Tracking Number</label>
+                                <input type="text" name="trackingNumber" class="form-control form-control-sm" />
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                Create Shipment
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <p>
+                            <strong>Status:</strong>
+                            <span class="badge @ShipmentBadgeClass(shipment.Status)">@shipment.Status</span>
+                        </p>
+                        <p class="mb-1"><strong>Carrier:</strong> @(shipment.Carrier ?? "—")</p>
+                        <p class="mb-1"><strong>Tracking #:</strong> @(shipment.TrackingNumber ?? "—")</p>
+
+                        @if (shipment.ShippedAt.HasValue)
+                        {
+                            <p class="mb-1 small text-muted">Shipped: @shipment.ShippedAt.Value.ToString("yyyy-MM-dd HH:mm")</p>
+                        }
+                        @if (shipment.DeliveredAt.HasValue)
+                        {
+                            <p class="mb-1 small text-muted">Delivered: @shipment.DeliveredAt.Value.ToString("yyyy-MM-dd HH:mm")</p>
+                        }
+
+                        <hr />
+
+                        <form asp-action="UpdateShipmentStatus" asp-route-id="@Model.Id" method="post">
+                            <div class="mb-2">
+                                <label class="form-label small">Update Status</label>
+                                <select name="status" class="form-select form-select-sm">
+                                    @foreach (var s in shipmentStatuses)
+                                    {
+                                        <option value="@s" selected="@(shipment.Status == s)">@s</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Carrier</label>
+                                <input type="text" name="carrier" class="form-control form-control-sm" value="@shipment.Carrier" />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Tracking Number</label>
+                                <input type="text" name="trackingNumber" class="form-control form-control-sm" value="@shipment.TrackingNumber" />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Note (optional)</label>
+                                <input type="text" name="note" class="form-control form-control-sm" />
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                Update Shipment
+                            </button>
+                        </form>
+
+                        @if (shipment.History.Any())
+                        {
+                            <hr />
+                            <p class="small mb-2"><strong>Timeline</strong></p>
+                            <ul class="list-unstyled small mb-0">
+                                @foreach (var h in shipment.History.OrderBy(h => h.ChangedAt))
+                                {
+                                    <li class="mb-1">
+                                        <span class="badge @ShipmentBadgeClass(h.Status)">@h.Status</span>
+                                        <span class="text-muted">@h.ChangedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                                        @if (!string.IsNullOrWhiteSpace(h.Note))
+                                        {
+                                            <div class="text-muted">@h.Note</div>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    }
+
+                </div>
+
+            </div>
+
+            <div class="card shadow-sm">
+
+                <div class="card-header bg-primary text-white">
+                    Order Summary
+                </div>
+
+                <div class="card-body">
+
+                    <form asp-action="UpdateStatus"
+                          asp-route-id="@Model.Id"
+                          method="post">
+
+                        <label class="form-label">
+                            <strong>Status</strong>
+                        </label>
+
+                        <select name="Status"
+                                class="form-select mb-3">
+
+                            <option value="Pending"
+                                    selected="@(Model.Status == "Pending")">
+                                Pending
+                            </option>
+
+                            <option value="Processing"
+                                    selected="@(Model.Status == "Processing")">
+                                Processing
+                            </option>
+
+                            <option value="Shipped"
+                                    selected="@(Model.Status == "Shipped")">
+                                Shipped
+                            </option>
+
+                            <option value="Delivered"
+                                    selected="@(Model.Status == "Delivered")">
+                                Delivered
+                            </option>
+
+                            <option value="Cancelled"
+                                    selected="@(Model.Status == "Cancelled")">
+                                Cancelled
+                            </option>
+
+                        </select>
+
+                        <button type="submit"
+                                class="btn btn-primary w-100">
+                            💾 Update Status
+                        </button>
+
+                    </form>
+                    <h4 class="mt-3">
+                        Total: $@Model.TotalAmount
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header bg-success text-white">
+                    Products
+                </div>
+
+                <div class="card-body">
+
+                    <table class="table table-hover">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Total</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+
+                                    <td>@item.ProductName</td>
+
+                                    <td>$@item.Price</td>
+
+                                    <td>@item.Quantity</td>
+
+                                    <td>$@item.Total</td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

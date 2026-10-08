@@ -1,0 +1,332 @@
+﻿@model ECommerce.Web.DTOs.AdminPaymentHistoryResultDto
+
+@{
+    ViewData["Title"] = "Payments";
+}
+
+<style>
+    .payments-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+    .payments-header .subtitle {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 0.15rem;
+    }
+
+    .payments-total {
+        text-align: right;
+    }
+
+    .payments-total .count {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #212529;
+        line-height: 1;
+    }
+
+    .payments-total .label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .filter-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .filter-card label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #6c757d;
+        margin-bottom: 0.3rem;
+    }
+
+    .payments-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .payments-table thead th {
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6c757d;
+        font-weight: 600;
+        padding: 0.85rem 1rem;
+        white-space: nowrap;
+    }
+
+    .payments-table tbody td {
+        padding: 0.85rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .payments-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .payments-table tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    .customer-cell .name {
+        font-weight: 500;
+        color: #212529;
+    }
+
+    .customer-cell .email {
+        font-size: 0.8rem;
+        color: #adb5bd;
+    }
+
+    .amount-cell .amount {
+        font-weight: 600;
+        color: #212529;
+    }
+
+    .amount-cell .currency {
+        font-size: 0.75rem;
+        color: #adb5bd;
+        margin-left: 0.15rem;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.32rem 0.65rem;
+        border-radius: 50rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .status-succeeded { background: #e6f7ec; color: #1e7e42; }
+    .status-pending { background: #fff6e0; color: #a5720b; }
+    .status-failed { background: #fdecec; color: #c0362c; }
+    .status-refunded { background: #eef0f2; color: #495057; }
+    .status-partiallyrefunded { background: #e8f1fd; color: #1b5fad; }
+    .status-canceled { background: #ececec; color: #495057; }
+
+    .failure-note {
+        font-size: 0.78rem;
+        color: #c0362c;
+        margin-top: 0.2rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3.5rem 1rem;
+        color: #adb5bd;
+    }
+
+    .empty-state .icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.6;
+    }
+
+    .refund-btn {
+        border-radius: 50rem;
+        font-size: 0.78rem;
+        padding: 0.3rem 0.75rem;
+    }
+
+    .payments-pagination {
+        padding: 1rem;
+        display: flex;
+        justify-content: center;
+    }
+</style>
+
+<div class="payments-header">
+    <div>
+        <h2 class="mb-0">Payments</h2>
+        <div class="subtitle">Track and manage customer payments and refunds</div>
+    </div>
+    <div class="payments-total">
+        <div class="count">@Model.TotalCount</div>
+        <div class="label">Total Payments</div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success d-flex align-items-center" role="alert">
+        <div>@TempData["Success"]</div>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <div>@TempData["Error"]</div>
+    </div>
+}
+
+<div class="filter-card">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-2">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select" asp-items="Html.GetEnumSelectList<ECommerce.Web.DTOs.PaymentStatus>()">
+                <option value="">All Statuses</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Provider</label>
+            <select name="provider" class="form-select" asp-items="Html.GetEnumSelectList<ECommerce.Web.DTOs.PaymentProvider>()">
+                <option value="">All Providers</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Order #</label>
+            <input type="number" name="orderId" class="form-control" placeholder="e.g. 1042" value="@ViewBag.OrderId" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">From</label>
+            <input type="date" name="fromDate" class="form-control" value="@ViewBag.FromDate" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">To</label>
+            <input type="date" name="toDate" class="form-control" value="@ViewBag.ToDate" />
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" type="submit">Apply Filters</button>
+        </div>
+    </form>
+</div>
+
+<div class="payments-card">
+    <div class="table-responsive">
+        <table class="table payments-table mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Provider</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Refunded</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <div class="icon">&#128179;</div>
+                                <div>No payments match these filters.</div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @foreach (var payment in Model.Items)
+                {
+                    <tr>
+                        <td>@payment.CreatedAt.ToLocalTime().ToString("g")</td>
+                        <td>
+                            <a asp-area="Admin" asp-controller="Orders" asp-action="Details" asp-route-id="@payment.OrderId" class="fw-semibold text-decoration-none">
+                                #@payment.OrderId
+                            </a>
+                        </td>
+                        <td class="customer-cell">
+                            <div class="name">@payment.CustomerName</div>
+                            <div class="email">@payment.CustomerEmail</div>
+                        </td>
+                        <td>@payment.Provider</td>
+                        <td class="amount-cell">
+                            <span class="amount">@payment.Amount.ToString("C")</span>
+                            <span class="currency">@payment.Currency.ToUpper()</span>
+                        </td>
+                        <td>
+                            @{
+                                var badgeClass = payment.Status switch
+                                {
+                                    ECommerce.Web.DTOs.PaymentStatus.Succeeded => "status-succeeded",
+                                    ECommerce.Web.DTOs.PaymentStatus.Pending => "status-pending",
+                                    ECommerce.Web.DTOs.PaymentStatus.Failed => "status-failed",
+                                    ECommerce.Web.DTOs.PaymentStatus.Refunded => "status-refunded",
+                                    ECommerce.Web.DTOs.PaymentStatus.PartiallyRefunded => "status-partiallyrefunded",
+                                    ECommerce.Web.DTOs.PaymentStatus.Canceled => "status-canceled",
+                                    _ => "status-refunded"
+                                };
+                            }
+                            <span class="status-badge @badgeClass">@payment.Status</span>
+                            @if (!string.IsNullOrEmpty(payment.FailureReason))
+                            {
+                                <div class="failure-note">@payment.FailureReason</div>
+                            }
+                        </td>
+                        <td>
+                            @(payment.RefundedAmount > 0 ? payment.RefundedAmount.ToString("C") : "—")
+                        </td>
+                        <td class="text-end">
+                            @if (payment.Status == ECommerce.Web.DTOs.PaymentStatus.Succeeded ||
+                                                    payment.Status == ECommerce.Web.DTOs.PaymentStatus.PartiallyRefunded)
+                            {
+                                <form asp-action="Refund" method="post"
+                                      onsubmit="return confirm('Refund the remaining amount for order #@payment.OrderId?');">
+                                    <input type="hidden" name="orderId" value="@payment.OrderId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger refund-btn">Refund</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="payments-pagination">
+            <nav>
+                <ul class="pagination mb-0">
+                    @for (var i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@i"
+                               asp-route-status="@ViewBag.Status"
+                               asp-route-provider="@ViewBag.Provider"
+                               asp-route-orderId="@ViewBag.OrderId"
+                               asp-route-fromDate="@ViewBag.FromDate"
+                               asp-route-toDate="@ViewBag.ToDate">
+                                @i
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+</div>

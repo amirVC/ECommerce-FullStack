@@ -1,0 +1,274 @@
+﻿@model ECommerce.Web.DTOs.AdminUserDetailsDto
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "User Details";
+}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="mb-1">
+                👤 User Details
+            </h2>
+
+            <p class="text-muted mb-0">
+                Customer profile and order history
+            </p>
+
+        </div>
+
+        <a asp-action="Index"
+           class="btn btn-outline-secondary">
+
+            ← Back to Users
+
+        </a>
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-lg-4">
+
+            <div class="card shadow-sm border-0 mb-4">
+
+                <div class="card-body text-center">
+
+                    <div class="display-1 mb-3">
+                        👤
+                    </div>
+
+                    <h3>
+                        @Model.FullName
+                    </h3>
+
+                    <p class="text-muted">
+                        @Model.Email
+                    </p>
+
+                    <hr />
+
+                    <form asp-action="UpdateRole"
+                          asp-route-id="@Model.Id"
+                          method="post">
+
+                        <div class="mb-3 text-start">
+
+                            <label class="form-label fw-bold">
+                                User Role
+                            </label>
+
+                            <select name="Role"
+                                    class="form-select">
+
+                                @if (Model.Role == "Admin")
+                                {
+                                    <option value="Admin" selected>
+                                        Admin
+                                    </option>
+
+                                    <option value="Customer">
+                                        Customer
+                                    </option>
+                                }
+                                else
+                                {
+                                    <option value="Admin">
+                                        Admin
+                                    </option>
+
+                                    <option value="Customer" selected>
+                                        Customer
+                                    </option>
+                                }
+
+                            </select>
+
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-success w-100">
+
+                            💾 Update Role
+
+                        </button>
+
+                    </form>
+
+                    <hr />
+
+                    <div class="text-start">
+
+                        <p>
+                            <strong>Joined:</strong><br />
+                            @Model.CreatedAt.ToShortDateString()
+                        </p>
+
+                        <p class="mb-0">
+                            <strong>User ID:</strong><br />
+                            #@Model.Id
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-8">
+
+            <div class="row">
+
+                <div class="col-md-6">
+
+                    <div class="card border-0 shadow-sm mb-4 bg-success text-white">
+
+                        <div class="card-body">
+
+                            <h6>Total Orders</h6>
+
+                            <h2>
+                                @Model.OrdersCount
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <div class="card border-0 shadow-sm mb-4 bg-primary text-white">
+
+                        <div class="card-body">
+
+                            <h6>Total Spent</h6>
+
+                            <h2>
+                                $@Model.TotalSpent.ToString("N2")
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-dark text-white">
+
+                    <h5 class="mb-0">
+
+                        🛒 Order History
+
+                    </h5>
+
+                </div>
+
+                <div class="card-body">
+
+                    @if (Model.Orders.Any())
+                    {
+                        <table class="table table-hover align-middle">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Total</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                @foreach (var order in Model.Orders)
+                                {
+                                    <tr>
+
+                                        <td>
+                                            #@order.Id
+                                        </td>
+
+                                        <td>
+                                            @order.OrderDate.ToShortDateString()
+                                        </td>
+
+                                        <td>
+
+                                            @if (order.Status == "Delivered")
+                                            {
+                                                <span class="badge bg-success">
+                                                    Delivered
+                                                </span>
+                                            }
+                                            else if (order.Status == "Pending")
+                                            {
+                                                <span class="badge bg-warning text-dark">
+                                                    Pending
+                                                </span>
+                                            }
+                                            else if (order.Status == "Cancelled")
+                                            {
+                                                <span class="badge bg-danger">
+                                                    Cancelled
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">
+                                                    @order.Status
+                                                </span>
+                                            }
+
+                                        </td>
+
+                                        <td>
+
+                                            $@order.TotalAmount.ToString("N2")
+
+                                        </td>
+
+                                    </tr>
+                                }
+
+                            </tbody>
+
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+
+                            <h5 class="text-muted">
+
+                                No orders yet.
+
+                            </h5>
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

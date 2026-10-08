@@ -1,0 +1,67 @@
+@model List<ECommerce.Web.DTOs.DeliveryMethodDto>
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Delivery Methods";
+}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>🚚 Delivery Methods</h2>
+        <a asp-action="Create" class="btn btn-primary">+ Add Delivery Method</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Estimated Days</th>
+                        <th>Active</th>
+                        <th>Sort Order</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var method in Model.OrderBy(m => m.SortOrder))
+                    {
+                        <tr>
+                            <td><strong>@method.Name</strong></td>
+                            <td>@method.Description</td>
+                            <td>@method.Price.ToString("C")</td>
+                            <td>@method.EstimatedDaysMin–@method.EstimatedDaysMax days</td>
+                            <td>
+                                @if (method.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td>@method.SortOrder</td>
+                            <td class="text-end">
+                                <a asp-action="Edit" asp-route-id="@method.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <form asp-action="Delete" asp-route-id="@method.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete this delivery method?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

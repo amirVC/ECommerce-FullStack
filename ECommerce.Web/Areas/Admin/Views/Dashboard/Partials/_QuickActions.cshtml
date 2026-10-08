@@ -1,0 +1,200 @@
+﻿@* <div class="row g-4 mb-4">
+
+    <div class="col-xl-3 col-md-6">
+
+        <a asp-area="Admin"
+           asp-controller="Products"
+           asp-action="Create"
+           class="text-decoration-none">
+
+            <div class="dashboard-card quick-action-card">
+
+                <div class="card-icon bg-primary">
+
+                    <i class="bi bi-plus-lg"></i>
+
+                </div>
+
+                <div>
+
+                    <h5 class="mb-1">
+                        Add Product
+                    </h5>
+
+                    <small class="text-muted">
+                        Create a new product
+                    </small>
+
+                </div>
+
+            </div>
+
+        </a>
+
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+
+        <a asp-area="Admin"
+           asp-controller="Categories"
+           asp-action="Create"
+           class="text-decoration-none">
+
+            <div class="dashboard-card quick-action-card">
+
+                <div class="card-icon bg-success">
+
+                    <i class="bi bi-folder-plus"></i>
+
+                </div>
+
+                <div>
+
+                    <h5 class="mb-1">
+                        Add Category
+                    </h5>
+
+                    <small class="text-muted">
+                        Create category
+                    </small>
+
+                </div>
+
+            </div>
+
+        </a>
+
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+
+        <a asp-area="Admin"
+           asp-controller="Orders"
+           asp-action="Index"
+           class="text-decoration-none">
+
+            <div class="dashboard-card quick-action-card">
+
+                <div class="card-icon bg-warning">
+
+                    <i class="bi bi-cart-check"></i>
+
+                </div>
+
+                <div>
+
+                    <h5 class="mb-1">
+                        View Orders
+                    </h5>
+
+                    <small class="text-muted">
+                        Manage customer orders
+                    </small>
+
+                </div>
+
+            </div>
+
+        </a>
+
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+
+        <a asp-area="Admin"
+           asp-controller="Users"
+           asp-action="Index"
+           class="text-decoration-none">
+
+            <div class="dashboard-card quick-action-card">
+
+                <div class="card-icon bg-danger">
+
+                    <i class="bi bi-people-fill"></i>
+
+                </div>
+
+                <div>
+
+                    <h5 class="mb-1">
+                        Manage Users
+                    </h5>
+
+                    <small class="text-muted">
+                        View all customers
+                    </small>
+
+                </div>
+
+            </div>
+
+        </a>
+
+    </div>
+
+</div> *@
+
+
+
+<div class="dashboard-card h-100">
+    <div class="dashboard-card-header mb-3">
+        <h4 class="dashboard-card-title mb-0">Quick Actions</h4>
+    </div>
+    <div class="quick-action-list">
+        <a asp-area="Admin"
+           asp-controller="Products"
+           asp-action="Create"
+           class="quick-action-row">
+            <span class="quick-action-icon bg-revenue">
+                <i class="bi bi-plus-lg"></i>
+            </span>
+            <span class="quick-action-text">
+                <span class="quick-action-title">Add Product</span>
+                <span class="quick-action-sub">Create a new product</span>
+            </span>
+            <i class="bi bi-chevron-right quick-action-arrow"></i>
+        </a>
+
+        <a asp-area="Admin"
+           asp-controller="Categories"
+           asp-action="Create"
+           class="quick-action-row">
+            <span class="quick-action-icon bg-orders">
+                <i class="bi bi-folder-plus"></i>
+            </span>
+            <span class="quick-action-text">
+                <span class="quick-action-title">Add Category</span>
+                <span class="quick-action-sub">Create category</span>
+            </span>
+            <i class="bi bi-chevron-right quick-action-arrow"></i>
+        </a>
+
+        <a asp-area="Admin"
+           asp-controller="Orders"
+           asp-action="Index"
+           class="quick-action-row">
+            <span class="quick-action-icon bg-stock">
+                <i class="bi bi-cart-check"></i>
+            </span>
+            <span class="quick-action-text">
+                <span class="quick-action-title">View Orders</span>
+                <span class="quick-action-sub">Manage customer orders</span>
+            </span>
+            <i class="bi bi-chevron-right quick-action-arrow"></i>
+        </a>
+
+        <a asp-area="Admin"
+           asp-controller="Users"
+           asp-action="Index"
+           class="quick-action-row">
+            <span class="quick-action-icon bg-customers">
+                <i class="bi bi-people-fill"></i>
+            </span>
+            <span class="quick-action-text">
+                <span class="quick-action-title">Manage Users</span>
+                <span class="quick-action-sub">View all customers</span>
+            </span>
+            <i class="bi bi-chevron-right quick-action-arrow"></i>
+        </a>
+    </div>
+</div>

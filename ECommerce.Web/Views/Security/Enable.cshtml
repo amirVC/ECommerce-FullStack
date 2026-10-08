@@ -1,0 +1,51 @@
+﻿@model ECommerce.Web.ViewModels.EnableTotpViewModel
+@{
+    ViewData["Title"] = "Enable Two-Factor Authentication";
+}
+<div class="container mt-5" style="max-width:500px;">
+    <h2 class="mb-3">Enable Two-Factor Authentication</h2>
+    <p class="text-muted mb-4">
+        Scan this QR code with an authenticator app (Google Authenticator, Authy, etc.),
+        or enter the setup key manually. Then enter the 6-digit code it generates to confirm.
+    </p>
+
+    <div class="text-center mb-4">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=@Uri.EscapeDataString(Model.QrCodeUri)"
+             alt="Two-factor authentication QR code"
+             width="220" height="220" />
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label">Setup key</label>
+        <input type="text" class="form-control" value="@Model.SecretKey" readonly
+               onclick="this.select();" />
+        <div class="form-text">Use this if you can't scan the QR code.</div>
+    </div>
+
+    <form asp-controller="Security" asp-action="Enable" method="post">
+        <input type="hidden" asp-for="SecretKey" />
+        <input type="hidden" asp-for="QrCodeUri" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="mb-3">
+            <label asp-for="Code" class="form-label">Authenticator code</label>
+            <input asp-for="Code"
+                   class="form-control"
+                   inputmode="numeric"
+                   autocomplete="one-time-code"
+                   maxlength="6"
+                   autofocus />
+            <span asp-validation-for="Code" class="text-danger"></span>
+        </div>
+        <button class="btn btn-dark w-100">
+            Confirm and Enable
+        </button>
+        <div class="text-center mt-3">
+            <a asp-controller="Security" asp-action="Index">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

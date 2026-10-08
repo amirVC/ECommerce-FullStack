@@ -1,0 +1,151 @@
+﻿@* @model ECommerce.Web.DTOs.DashboardResponseDto
+
+
+<div class="dashboard-card d-block w-100">
+            <h4 class="mb-4">
+
+                <i class="bi bi-graph-up-arrow text-success"></i>
+
+                Monthly Revenue
+
+            </h4>
+
+            <canvas id="salesChart" height="90"></canvas>
+
+        </div>
+
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const ctx = document.getElementById("salesChart");
+
+        if (!ctx)
+            return;
+
+        const labels = [
+
+            @foreach (var item in Model.MonthlySales)
+            {
+                    <text>"@item.Month",</text>
+            }
+
+        ];
+
+        const data = [
+
+            @foreach (var item in Model.MonthlySales)
+            {
+                    <text>@item.Revenue,</text>
+            }
+
+        ];
+
+        new Chart(ctx, {
+
+            type: "line",
+
+            data: {
+
+                labels: labels,
+
+                datasets: [
+
+                    {
+
+                        label: "Revenue",
+
+                        data: data,
+
+                        fill: true,
+
+                        borderWidth: 3,
+
+                        tension: .35
+
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: true,
+
+                plugins: {
+
+                    legend: {
+
+                        display: false
+
+                    }   
+
+                }
+
+            }
+
+        });
+
+    });
+
+</script> *@
+
+
+@model List<ECommerce.Web.DTOs.MonthlySalesDto>
+
+<div class="dashboard-card dashboard-chart-card">
+
+    <div class="dashboard-card-header">
+
+        <div>
+
+            <h4 class="dashboard-card-title">
+                <i class="bi bi-graph-up-arrow text-success"></i>
+                Monthly Revenue
+            </h4>
+
+            <small class="text-muted">
+                Revenue overview for the last 12 months
+            </small>
+
+        </div>
+
+        <span class="badge bg-success fs-6 px-3 py-2">
+            Last 12 Months
+        </span>
+
+    </div>
+
+    <hr />
+
+    <div class="chart-wrapper">
+
+        <canvas id="salesChart"></canvas>
+
+    </div>
+
+    <hr />
+
+    <div class="d-flex justify-content-between align-items-center">
+
+        <span class="text-muted">
+
+            <i class="bi bi-arrow-up-right-circle-fill text-success"></i>
+
+            Revenue Trend
+
+        </span>
+
+        <span class="fw-semibold text-success">
+
+            Live Analytics
+
+        </span>
+
+    </div>
+
+</div>

@@ -1,0 +1,50 @@
+﻿@{
+    ViewData["Title"] = "Email Confirmation";
+}
+
+<div class="container mt-5" style="max-width: 600px;">
+
+    <div class="card shadow-sm">
+        <div class="card-body text-center p-5">
+
+            @if (ViewBag.Success == true)
+            {
+                <div class="mb-4">
+                    <div class="display-4 text-success">✓</div>
+                </div>
+
+                <h2 class="mb-3">Email Confirmed</h2>
+
+                <p class="text-muted mb-4">
+                    @ViewBag.Message
+                </p>
+
+                <a asp-controller="Account"
+                   asp-action="Login"
+                   class="btn btn-success">
+                    Go to Login
+                </a>
+            }
+            else
+            {
+                <div class="mb-4">
+                    <div class="display-4 text-danger">!</div>
+                </div>
+
+                <h2 class="mb-3">Confirmation Failed</h2>
+
+                <p class="text-muted mb-4">
+                    @ViewBag.Message
+                </p>
+
+                <a asp-controller="Account"
+                   asp-action="Register"
+                   class="btn btn-primary">
+                    Create a New Account
+                </a>
+            }
+
+        </div>
+    </div>
+
+</div>

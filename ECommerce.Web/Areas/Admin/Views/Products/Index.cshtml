@@ -1,0 +1,167 @@
+﻿@model List<ECommerce.Web.DTOs.AdminProductDto>
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Products";
+}
+
+<h2 class="mb-4">
+    📦 Products
+</h2>
+
+<form asp-action="Index"
+      method="get"
+      class="row g-3 mb-4">
+
+    <div class="col-md-6">
+
+        <input type="text"
+               name="search"
+               value="@ViewBag.Search"
+               class="form-control"
+               placeholder="🔍 Search products or categories..." />
+
+    </div>
+
+    <div class="col-auto">
+
+        <button class="btn btn-primary">
+            Search
+        </button>
+
+    </div>
+
+    <div class="col-auto">
+
+        <a asp-action="Index"
+           class="btn btn-outline-secondary">
+
+            Clear
+
+        </a>
+
+    </div>
+
+</form>
+
+<a asp-area="Admin"
+   asp-controller="Products"
+   asp-action="Create"
+   class="btn btn-primary mb-3">
+    + Create Product
+</a>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>SKU</th>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Category</th>
+            <th width="170">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model)
+        {
+            <tr>
+                <td>@product.Id</td>
+                <td><code>@product.SKU</code></td>
+                <td>
+                    @{
+                        var adminThumb = string.IsNullOrWhiteSpace(product.ThumbnailUrl)
+                        ? product.ImageUrl
+                        : product.ThumbnailUrl;
+                    }
+                    @if (!string.IsNullOrWhiteSpace(adminThumb))
+                    {
+                        <img src="@adminThumb" alt="@product.Name"
+                             style="width:48px;height:48px;object-fit:cover;" class="rounded" />
+                    }
+                </td>
+                <td>@product.Name</td>
+                <td>$@product.Price</td>
+                <td>@product.Stock</td>
+                <td>@product.CategoryName</td>
+                <td>
+                    <a asp-action="Edit"
+                       asp-route-id="@product.Id"
+                       class="btn btn-warning btn-sm">
+                        ✏️ Edit
+                    </a>
+                    <form asp-action="Delete"
+                          asp-route-id="@product.Id"
+                          method="post"
+                          class="d-inline"
+                          onsubmit="return confirm('Are you sure you want to delete this product?');">
+                        <button type="submit"
+                                class="btn btn-danger btn-sm">
+                            🗑 Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+@if (ViewBag.TotalPages > 1)
+{
+    <nav class="mt-4">
+
+        <ul class="pagination justify-content-center">
+
+            @if (ViewBag.CurrentPage > 1)
+            {
+                <li class="page-item">
+
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-search="@ViewBag.Search"
+                       asp-route-page="@(ViewBag.CurrentPage - 1)">
+
+                        Previous
+
+                    </a>
+
+                </li>
+            }
+
+            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-search="@ViewBag.Search"
+                       asp-route-page="@i">
+
+                        @i
+
+                    </a>
+
+                </li>
+            }
+
+            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+            {
+                <li class="page-item">
+
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-search="@ViewBag.Search"
+                       asp-route-page="@(ViewBag.CurrentPage + 1)">
+
+                        Next
+
+                    </a>
+
+                </li>
+            }
+
+        </ul>
+
+    </nav>
+}

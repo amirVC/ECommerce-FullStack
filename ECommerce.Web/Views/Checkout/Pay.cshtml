@@ -1,0 +1,83 @@
+﻿@{
+    ViewData["Title"] = "Pay for your order";
+    string clientSecret = ViewBag.ClientSecret;
+    string publishableKey = ViewBag.PublishableKey;
+    int orderId = ViewBag.OrderId;
+    decimal amount = ViewBag.Amount;
+    string currency = ViewBag.Currency;
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <h2 class="mb-3">Pay for Order #@orderId</h2>
+            <p class="text-muted mb-4">
+                Amount due: <strong>@amount.ToString("C")</strong> (@currency.ToUpper())
+            </p>
+
+            <div id="payment-error" class="alert alert-danger d-none" role="alert"></div>
+
+            <form id="payment-form">
+                <div id="payment-element" class="mb-3">
+                    <!-- Stripe Elements mounts the card input here -->
+                </div>
+
+                <button id="submit-button" class="btn btn-success w-100" type="submit">
+                    <span id="button-text">Pay @amount.ToString("C")</span>
+                    <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                </button>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        const stripe = Stripe('@publishableKey');
+        const clientSecret = '@clientSecret';
+
+        const elements = stripe.elements({ clientSecret });
+        const paymentElement = elements.create('payment');
+        paymentElement.mount('#payment-element');
+
+        const form = document.getElementById('payment-form');
+        const errorBox = document.getElementById('payment-error');
+        const submitButton = document.getElementById('submit-button');
+        const buttonText = document.getElementById('button-text');
+        const spinner = document.getElementById('spinner');
+
+        function setLoading(isLoading) {
+            submitButton.disabled = isLoading;
+            buttonText.classList.toggle('d-none', isLoading);
+            spinner.classList.toggle('d-none', !isLoading);
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            setLoading(true);
+            errorBox.classList.add('d-none');
+
+            const { error } = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    // Stripe redirects here after confirmation (needed for
+                    // payment methods that require an off-page redirect, e.g. some
+                    // bank/wallet methods). Card payments usually resolve inline.
+                    return_url: window.location.origin + '/Checkout/Success?orderId=@orderId'
+                }
+            });
+
+            // If we get here without a redirect having happened, something went
+            // wrong immediately (e.g. invalid card). A successful payment for
+            // methods that don't redirect will have already navigated away.
+            if (error) {
+                errorBox.textContent = error.message || 'Payment failed. Please check your card details and try again.';
+                errorBox.classList.remove('d-none');
+                setLoading(false);
+            }
+        });
+    </script>
+}

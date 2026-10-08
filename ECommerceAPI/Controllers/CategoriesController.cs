@@ -19,6 +19,7 @@ namespace ECommerceAPI.Controllers
         }
 
         [HttpGet]
+        [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetAll()
         {
             var categories = await _context.Categories
@@ -42,6 +43,7 @@ namespace ECommerceAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetById(int id)
         {
             var category = await _context.Categories

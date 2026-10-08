@@ -1,0 +1,9 @@
+﻿@model int
+<a asp-controller="Wishlist"
+   asp-action="Index"
+   class="nav-link">
+    ❤️ Wishlist
+    <span id="wishlistBadge" class="badge bg-danger ms-1" style="display:@(Model > 0 ? "inline-block" : "none")">
+        @Model
+    </span>
+</a>

@@ -1,0 +1,92 @@
+﻿@model ECommerce.Web.DTOs.AdminUserDetailsDto
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Delete User";
+}
+
+<div class="container">
+
+    <div class="card border-danger shadow">
+
+        <div class="card-header bg-danger text-white">
+
+            <h3 class="mb-0">
+                ⚠ Delete User
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="alert alert-warning">
+
+                <strong>
+                    Warning!
+                </strong>
+
+                This action cannot be undone.
+
+            </div>
+
+            <dl class="row">
+
+                <dt class="col-sm-3">
+                    Full Name
+                </dt>
+
+                <dd class="col-sm-9">
+                    @Model.FullName
+                </dd>
+
+                <dt class="col-sm-3">
+                    Email
+                </dt>
+
+                <dd class="col-sm-9">
+                    @Model.Email
+                </dd>
+
+                <dt class="col-sm-3">
+                    Role
+                </dt>
+
+                <dd class="col-sm-9">
+                    @Model.Role
+                </dd>
+
+                <dt class="col-sm-3">
+                    Orders
+                </dt>
+
+                <dd class="col-sm-9">
+                    @Model.OrdersCount
+                </dd>
+
+            </dl>
+
+            <form asp-action="Delete"
+                  asp-route-id="@Model.Id"
+                  method="post">
+
+                <a asp-action="Index"
+                   class="btn btn-secondary">
+
+                    Cancel
+
+                </a>
+
+                <button type="submit"
+                        class="btn btn-danger">
+
+                    🗑 Delete User
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>

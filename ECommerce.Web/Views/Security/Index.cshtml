@@ -1,0 +1,59 @@
+﻿@model ECommerce.Web.ViewModels.SecurityIndexViewModel
+@{
+    ViewData["Title"] = "Security";
+}
+<div class="container mt-5" style="max-width:600px;">
+    <h2 class="mb-4">Security</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Two-Factor Authentication (Authenticator App)</h5>
+            <p class="card-text text-muted">
+                Adds a second step at login using a code from an authenticator
+                app (like Google Authenticator or Authy), on top of the email
+                code you already receive every time you sign in.
+            </p>
+
+            @if (Model.TwoFactorEnabled)
+            {
+                <p class="mb-3">
+                    <span class="badge bg-success">Enabled</span>
+                </p>
+
+                <form asp-controller="Security" asp-action="Disable" method="post"
+                      onsubmit="return confirm('Turn off two-factor authentication?');">
+                    <div class="mb-3" style="max-width:220px;">
+                        <label class="form-label">Authenticator code</label>
+                        <input name="Code"
+                               class="form-control"
+                               inputmode="numeric"
+                               maxlength="6"
+                               required />
+                    </div>
+                    <button class="btn btn-outline-danger">
+                        Disable Two-Factor Authentication
+                    </button>
+                </form>
+            }
+            else
+            {
+                <p class="mb-3">
+                    <span class="badge bg-secondary">Disabled</span>
+                </p>
+
+                <a asp-controller="Security" asp-action="Enable" class="btn btn-dark">
+                    Enable Two-Factor Authentication
+                </a>
+            }
+        </div>
+    </div>
+</div>

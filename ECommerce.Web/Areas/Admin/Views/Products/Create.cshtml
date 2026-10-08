@@ -1,0 +1,1443 @@
+﻿@model ECommerce.Web.ViewModels.AdminCreateProductViewModel
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Create Product";
+}
+
+<div class="epx">
+
+    <style>
+        .epx {
+            --epx-bg: #F5F6F8;
+            --epx-surface: #FFFFFF;
+            --epx-border: #E4E7EC;
+            --epx-text: #1A2234;
+            --epx-text-soft: #6B7385;
+            --epx-accent: #4A56E2;
+            --epx-accent-dark: #3A44C4;
+            --epx-accent-soft: #EEF0FD;
+            --epx-danger: #D6423C;
+            --epx-radius: 12px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--epx-text);
+        }
+
+            .epx * {
+                box-sizing: border-box;
+            }
+
+        .epx-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .epx-eyebrow {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--epx-accent);
+            margin-bottom: 6px;
+        }
+
+        .epx-header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            margin: 0 0 4px;
+            letter-spacing: -0.02em;
+        }
+
+        .epx-header p {
+            color: var(--epx-text-soft);
+            margin: 0;
+            font-size: 14.5px;
+        }
+
+        .epx-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .15s ease;
+            white-space: nowrap;
+        }
+
+        .epx-btn-ghost {
+            background: var(--epx-surface);
+            border-color: var(--epx-border);
+            color: var(--epx-text);
+        }
+
+            .epx-btn-ghost:hover {
+                background: #F0F1F4;
+                color: var(--epx-text);
+            }
+
+        .epx-btn-primary {
+            background: var(--epx-accent);
+            color: #fff;
+        }
+
+            .epx-btn-primary:hover {
+                background: var(--epx-accent-dark);
+                color: #fff;
+            }
+
+        .epx-grid {
+            display: grid;
+            grid-template-columns: 1.7fr 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @@media (max-width: 991px) {
+            .epx-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .epx-card {
+            background: var(--epx-surface);
+            border: 1px solid var(--epx-border);
+            border-radius: var(--epx-radius);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .epx-card-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin: 0 0 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--epx-border);
+        }
+
+        .epx-field {
+            margin-bottom: 18px;
+        }
+
+            .epx-field:last-child {
+                margin-bottom: 0;
+            }
+
+        .epx-field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .epx-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--epx-text);
+            margin-bottom: 6px;
+        }
+
+        .epx-required {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--epx-danger);
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+
+        .epx-input {
+            width: 100%;
+            border: 1px solid var(--epx-border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14.5px;
+            color: var(--epx-text);
+            background: var(--epx-surface);
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+            .epx-input:focus {
+                outline: none;
+                border-color: var(--epx-accent);
+                box-shadow: 0 0 0 3px var(--epx-accent-soft);
+            }
+
+        textarea.epx-input {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .epx-input-prefix {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--epx-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+            .epx-input-prefix span {
+                padding: 10px 12px;
+                background: #F7F8FA;
+                color: var(--epx-text-soft);
+                font-weight: 600;
+                border-right: 1px solid var(--epx-border);
+            }
+
+            .epx-input-prefix .epx-input {
+                border: none;
+                border-radius: 0;
+            }
+
+                .epx-input-prefix .epx-input:focus {
+                    box-shadow: none;
+                }
+
+            .epx-input-prefix:focus-within {
+                border-color: var(--epx-accent);
+                box-shadow: 0 0 0 3px var(--epx-accent-soft);
+            }
+
+        .epx-error {
+            display: block;
+            font-size: 12.5px;
+            color: var(--epx-danger);
+            margin-top: 5px;
+        }
+
+        .epx-sale-hint {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--epx-text-soft);
+        }
+
+        .epx-sale-invalid {
+            border-color: var(--epx-danger) !important;
+            box-shadow: 0 0 0 3px rgba(214, 66, 60, 0.08) !important;
+        }
+
+        .epx-dropzone {
+            display: block;
+            border: 1.5px dashed var(--epx-border);
+            border-radius: var(--epx-radius);
+            background: #FAFBFC;
+            cursor: pointer;
+            transition: border-color .15s ease, background .15s ease;
+        }
+
+            .epx-dropzone:hover,
+            .epx-dropzone.epx-drag {
+                border-color: var(--epx-accent);
+                background: var(--epx-accent-soft);
+            }
+
+        .epx-dropzone-inner {
+            padding: 28px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 4px;
+        }
+
+        .epx-dropzone-sm .epx-dropzone-inner {
+            padding: 20px 16px;
+        }
+
+        .epx-dz-icon {
+            color: var(--epx-text-soft);
+            margin-bottom: 4px;
+        }
+
+        .epx-dz-text {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--epx-text);
+        }
+
+        .epx-dz-hint {
+            font-size: 12px;
+            color: var(--epx-text-soft);
+        }
+
+        .epx-preview-img {
+            width: 100%;
+            max-height: 220px;
+            object-fit: cover;
+            border-radius: var(--epx-radius);
+            display: block;
+        }
+
+        .epx-preview-wrap {
+            position: relative;
+            width: 100%;
+        }
+
+        .epx-remove-x {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(26, 34, 52, 0.75);
+            color: #fff;
+            font-size: 15px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s ease;
+        }
+
+            .epx-remove-x:hover {
+                background: var(--epx-danger);
+            }
+
+        .epx-file-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--epx-accent-soft);
+            color: var(--epx-accent-dark);
+            font-size: 12.5px;
+            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 999px;
+            margin-top: 8px;
+        }
+
+        .epx-queue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .epx-queue-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 10px;
+            background: #FAFBFC;
+            border: 1px solid var(--epx-border);
+            border-radius: 9px;
+            padding: 8px 10px;
+        }
+
+        .epx-queue-name {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--epx-text);
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .epx-queue-alt {
+            width: 100%;
+            border: 1px solid var(--epx-border);
+            border-radius: 6px;
+            padding: 6px 9px;
+            font-size: 12.5px;
+            background: var(--epx-surface);
+        }
+
+            .epx-queue-alt:focus {
+                outline: none;
+                border-color: var(--epx-accent);
+                box-shadow: 0 0 0 2px var(--epx-accent-soft);
+            }
+
+        .epx-queue-remove {
+            border: none;
+            background: rgba(214, 66, 60, 0.1);
+            color: var(--epx-danger);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+            .epx-queue-remove:hover {
+                background: rgba(214, 66, 60, 0.2);
+            }
+
+        .epx-actionbar {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding-top: 4px;
+        }
+    </style>
+
+    <div class="epx-header">
+        <div>
+            <span class="epx-eyebrow">Catalog</span>
+            <h1>Create product</h1>
+            <p>Add a new item to your catalog with pricing, inventory and imagery.</p>
+        </div>
+
+        <a asp-action="Index" class="epx-btn epx-btn-ghost">
+            ← Back to products
+        </a>
+    </div>
+
+    <form asp-action="Create"
+          method="post"
+          enctype="multipart/form-data"
+          class="epx-grid">
+
+        <div>
+
+            <!-- PRODUCT DETAILS -->
+            <section class="epx-card">
+
+                <h2 class="epx-card-title">
+                    Product details
+                </h2>
+
+                <div class="epx-field">
+
+                    <label asp-for="Product.SKU">
+                        SKU
+                    </label>
+
+                    <input asp-for="Product.SKU"
+                           class="epx-input"
+                           placeholder="e.g. HDPH-BLK-001" />
+
+                    <span asp-validation-for="Product.SKU"
+                          class="epx-error"></span>
+
+                    <small class="epx-sale-hint">
+                        A unique code you use to identify this product (inventory, invoices, barcodes). Must be unique across all products.
+                    </small>
+
+                </div>
+
+                <div class="epx-field">
+
+                    <label asp-for="Product.Name"></label>
+
+                    <input asp-for="Product.Name"
+                           class="epx-input"
+                           placeholder="e.g. Wireless noise-cancelling headphones" />
+
+                    <span asp-validation-for="Product.Name"
+                          class="epx-error"></span>
+
+                </div>
+
+                <div class="epx-field">
+
+                    <label asp-for="Product.Description"></label>
+
+                    <textarea asp-for="Product.Description"
+                              class="epx-input"
+                              rows="6"
+                              placeholder="Describe materials, features and what makes this product stand out..."></textarea>
+
+                    <span asp-validation-for="Product.Description"
+                          class="epx-error"></span>
+
+                </div>
+
+            </section>
+
+
+            <!-- PRICING -->
+            <section class="epx-card">
+
+                <h2 class="epx-card-title">
+                    Pricing &amp; inventory
+                </h2>
+
+                <div class="epx-field-row">
+
+                    <div class="epx-field">
+
+                        <label asp-for="Product.Price"></label>
+
+                        <div class="epx-input-prefix">
+
+                            <span>$</span>
+
+                            <input asp-for="Product.Price"
+                                   class="epx-input"
+                                   type="number"
+                                   min="0"
+                                   step="0.01"
+                                   placeholder="0.00" />
+
+                        </div>
+
+                        <span asp-validation-for="Product.Price"
+                              class="epx-error"></span>
+
+                    </div>
+
+
+                    <div class="epx-field">
+
+                        <label asp-for="Product.Stock"></label>
+
+                        <input asp-for="Product.Stock"
+                               class="epx-input"
+                               type="number"
+                               min="0"
+                               placeholder="0" />
+
+                        <span asp-validation-for="Product.Stock"
+                              class="epx-error"></span>
+
+                    </div>
+
+                </div>
+
+
+                <hr style="border-color: var(--epx-border); margin: 20px 0;" />
+
+
+                <!-- SALE PRICE - ONLY ONE BLOCK -->
+                <div class="epx-field">
+
+                    <label asp-for="Product.SalePrice">
+                        Sale price
+                    </label>
+
+                    <div class="epx-input-prefix"
+                         id="salePriceWrapper">
+
+                        <span>$</span>
+
+                        <input asp-for="Product.SalePrice"
+                               class="epx-input"
+                               type="number"
+                               min="0"
+                               step="0.01"
+                               placeholder="Optional — leave blank for no sale" />
+
+                    </div>
+
+                    <span asp-validation-for="Product.SalePrice"
+                          class="epx-error"
+                          id="salePriceError"></span>
+
+                    <small class="epx-sale-hint">
+                        Sale price must be lower than the regular price.
+                    </small>
+
+                </div>
+
+
+                <!-- SALE DATES -->
+                <div class="epx-field-row">
+
+                    <div class="epx-field">
+
+                        <label asp-for="Product.SaleStartDate">
+                            Sale starts
+                        </label>
+
+                        <input asp-for="Product.SaleStartDate"
+                               asp-format="{0:yyyy-MM-ddTHH:mm}"
+                               class="epx-input"
+                               type="datetime-local" />
+
+                        <span asp-validation-for="Product.SaleStartDate"
+                              class="epx-error"></span>
+
+                    </div>
+
+
+                    <div class="epx-field">
+
+                        <label asp-for="Product.SaleEndDate">
+                            Sale ends
+                        </label>
+
+                        <input asp-for="Product.SaleEndDate"
+                               asp-format="{0:yyyy-MM-ddTHH:mm}"
+                               class="epx-input"
+                               type="datetime-local" />
+
+                        <span asp-validation-for="Product.SaleEndDate"
+                              class="epx-error"></span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- RIGHT COLUMN -->
+        <div>
+
+            <!-- ORGANIZATION -->
+            <section class="epx-card">
+
+                <h2 class="epx-card-title">
+                    Organization
+                </h2>
+
+                <div class="epx-field">
+
+                    <label asp-for="Product.CategoryId"></label>
+
+                    <select asp-for="Product.CategoryId"
+                            class="epx-input">
+
+                        <option value="">
+                            Select a category
+                        </option>
+
+                        @foreach (var category in Model.Categories)
+                        {
+                            <option value="@category.Id">
+                                @category.Name
+                            </option>
+                        }
+
+                    </select>
+
+                    <span asp-validation-for="Product.CategoryId"
+                          class="epx-error"></span>
+
+                </div>
+
+            </section>
+
+
+            <!-- MEDIA -->
+            <section class="epx-card">
+
+                <h2 class="epx-card-title">
+                    Media
+                </h2>
+
+
+                <!-- COVER IMAGE -->
+                <div class="epx-field">
+
+                    <label>
+                        Primary cover image
+                        <span class="epx-required">
+                            Required
+                        </span>
+                    </label>
+
+                    <label class="epx-dropzone"
+                           id="primaryDrop">
+
+                        <input asp-for="ImageFile"
+                               type="file"
+                               accept=".jpg,.jpeg,.png,.webp"
+                               id="primaryInput"
+                               hidden />
+
+                        <div class="epx-dropzone-inner"
+                             id="primaryPreview">
+
+                            <svg class="epx-dz-icon"
+                                 width="28"
+                                 height="28"
+                                 viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.6">
+
+                                <path d="M12 16V4M12 4l-4 4M12 4l4 4"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+
+                                <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+
+                            </svg>
+
+                            <span class="epx-dz-text">
+                                Click to upload or drag &amp; drop
+                            </span>
+
+                            <span class="epx-dz-hint">
+                                JPG, PNG or WEBP · this becomes the main product image
+                            </span>
+
+                        </div>
+
+                    </label>
+
+                    <span asp-validation-for="ImageFile"
+                          class="epx-error"></span>
+
+                </div>
+
+
+                <!-- COVER ALT TEXT -->
+                <div class="epx-field">
+
+                    <label asp-for="Product.ImageAltText">
+                        Cover alt text
+                    </label>
+
+                    <input asp-for="Product.ImageAltText"
+                           class="epx-input"
+                           placeholder="Optional · describes the cover image for SEO and accessibility" />
+
+                    <span asp-validation-for="Product.ImageAltText"
+                          class="epx-error"></span>
+
+                </div>
+
+
+                <!-- GALLERY -->
+                <div class="epx-field">
+
+                    <label asp-for="GalleryImages"></label>
+
+                    <label class="epx-dropzone epx-dropzone-sm"
+                           id="galleryDrop">
+
+                        <input asp-for="GalleryImages"
+                               type="file"
+                               multiple
+                               accept=".jpg,.jpeg,.png,.webp"
+                               id="galleryInput"
+                               hidden />
+
+                        <div class="epx-dropzone-inner">
+
+                            <svg class="epx-dz-icon"
+                                 width="24"
+                                 height="24"
+                                 viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.6">
+
+                                <rect x="3"
+                                      y="3"
+                                      width="18"
+                                      height="18"
+                                      rx="2" />
+
+                                <circle cx="8.5"
+                                        cy="8.5"
+                                        r="1.5" />
+
+                                <path d="M21 15l-5-5L5 21"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+
+                            </svg>
+
+                            <span class="epx-dz-text"
+                                  id="galleryText">
+
+                                Click to add images — click again to add more
+
+                            </span>
+
+                            <span class="epx-dz-hint">
+
+                                Optional · each image can have its own alt text below
+
+                            </span>
+
+                        </div>
+
+                    </label>
+
+                    <div class="epx-queue-list"
+                         id="galleryQueueList">
+                    </div>
+
+                    <div id="galleryAltTextInputs"
+                         style="display:none;">
+                    </div>
+
+                    <span asp-validation-for="GalleryImages"
+                          class="epx-error"></span>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+        <div class="epx-actionbar">
+
+            <a asp-action="Index"
+               class="epx-btn epx-btn-ghost">
+                Cancel
+            </a>
+
+            <button type="submit"
+                    class="epx-btn epx-btn-primary">
+                Save product
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+
+        (function () {
+
+            // =========================================================
+            // PRIMARY IMAGE
+            // =========================================================
+
+            function setupDropzone(dropId, inputId, onFiles) {
+
+                var drop = document.getElementById(dropId);
+                var input = document.getElementById(inputId);
+
+                if (!drop || !input) {
+                    return;
+                }
+
+                ['dragenter', 'dragover'].forEach(function (evt) {
+
+                    drop.addEventListener(evt, function (e) {
+
+                        e.preventDefault();
+
+                        drop.classList.add('epx-drag');
+
+                    });
+
+                });
+
+                ['dragleave', 'drop'].forEach(function (evt) {
+
+                    drop.addEventListener(evt, function (e) {
+
+                        e.preventDefault();
+
+                        drop.classList.remove('epx-drag');
+
+                    });
+
+                });
+
+                drop.addEventListener('drop', function (e) {
+
+                    if (e.dataTransfer.files &&
+                        e.dataTransfer.files.length) {
+
+                        input.files = e.dataTransfer.files;
+
+                        onFiles(input.files);
+
+                    }
+
+                });
+
+                input.addEventListener('change', function () {
+
+                    onFiles(input.files);
+
+                });
+
+            }
+
+
+            var primaryPlaceholderHtml =
+                document.getElementById('primaryPreview').innerHTML;
+
+
+            setupDropzone(
+                'primaryDrop',
+                'primaryInput',
+                function (files) {
+
+                    if (!files.length) {
+                        return;
+                    }
+
+                    var reader = new FileReader();
+
+                    reader.onload = function (e) {
+
+                        var preview =
+                            document.getElementById('primaryPreview');
+
+                        preview.innerHTML =
+                            '<div class="epx-preview-wrap">' +
+
+                            '<img src="' +
+                            e.target.result +
+                            '" class="epx-preview-img" />' +
+
+                            '<button type="button" ' +
+                            'class="epx-remove-x" ' +
+                            'id="primaryRemoveBtn" ' +
+                            'aria-label="Remove selected cover image">' +
+
+                            '×' +
+
+                            '</button>' +
+
+                            '</div>' +
+
+                            '<span class="epx-file-chip">' +
+                            files[0].name +
+                            '</span>';
+
+
+                        document
+                            .getElementById('primaryRemoveBtn')
+                            .addEventListener(
+                                'click',
+                                function (e) {
+
+                                    e.preventDefault();
+                                    e.stopPropagation();
+
+                                    var primaryInput =
+                                        document.getElementById(
+                                            'primaryInput'
+                                        );
+
+                                    primaryInput.value = '';
+
+                                    document.getElementById(
+                                        'primaryPreview'
+                                    ).innerHTML =
+                                        primaryPlaceholderHtml;
+
+                                }
+                            );
+
+                    };
+
+                    reader.readAsDataURL(files[0]);
+
+                }
+            );
+
+
+            // =========================================================
+            // GALLERY
+            // =========================================================
+
+            (function setupGalleryQueue() {
+
+                var drop =
+                    document.getElementById('galleryDrop');
+
+                var input =
+                    document.getElementById('galleryInput');
+
+                var text =
+                    document.getElementById('galleryText');
+
+                var queueList =
+                    document.getElementById('galleryQueueList');
+
+                var altInputsHost =
+                    document.getElementById(
+                        'galleryAltTextInputs'
+                    );
+
+                if (!drop || !input) {
+                    return;
+                }
+
+
+                var queue = [];
+
+
+                function keyOf(file) {
+
+                    return file.name +
+                        '|' +
+                        file.size +
+                        '|' +
+                        file.lastModified;
+
+                }
+
+
+                function syncFileInput() {
+
+                    var dt = new DataTransfer();
+
+                    queue.forEach(function (item) {
+
+                        dt.items.add(item.file);
+
+                    });
+
+                    input.files = dt.files;
+
+                }
+
+
+                function syncAltTextInputs() {
+
+                    altInputsHost.innerHTML = '';
+
+                    queue.forEach(function (item) {
+
+                        var hidden =
+                            document.createElement('input');
+
+                        hidden.type = 'hidden';
+
+                        hidden.name = 'GalleryAltTexts';
+
+                        hidden.value =
+                            item.altText || '';
+
+                        altInputsHost.appendChild(hidden);
+
+                    });
+
+                }
+
+
+                function render() {
+
+                    text.textContent =
+                        queue.length
+                            ? queue.length +
+                              ' image' +
+                              (queue.length > 1 ? 's' : '') +
+                              ' queued — click to add more'
+                            : 'Click to add images — click again to add more';
+
+
+                    queueList.innerHTML = '';
+
+
+                    queue.forEach(function (item, idx) {
+
+                        var row =
+                            document.createElement('div');
+
+                        row.className =
+                            'epx-queue-item';
+
+
+                        var name =
+                            document.createElement('span');
+
+                        name.className =
+                            'epx-queue-name';
+
+                        name.title =
+                            item.file.name;
+
+                        name.textContent =
+                            item.file.name;
+
+                        row.appendChild(name);
+
+
+                        var altInput =
+                            document.createElement('input');
+
+                        altInput.type = 'text';
+
+                        altInput.className =
+                            'epx-queue-alt';
+
+                        altInput.placeholder =
+                            'Alt text for this image (optional)';
+
+                        altInput.value =
+                            item.altText || '';
+
+
+                        altInput.addEventListener(
+                            'input',
+                            function () {
+
+                                queue[idx].altText =
+                                    altInput.value;
+
+                                syncAltTextInputs();
+
+                            }
+                        );
+
+
+                        row.appendChild(altInput);
+
+
+                        var removeBtn =
+                            document.createElement('button');
+
+                        removeBtn.type = 'button';
+
+                        removeBtn.className =
+                            'epx-queue-remove';
+
+                        removeBtn.setAttribute(
+                            'aria-label',
+                            'Remove ' + item.file.name
+                        );
+
+                        removeBtn.textContent = '×';
+
+
+                        removeBtn.addEventListener(
+                            'click',
+                            function (e) {
+
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                queue.splice(idx, 1);
+
+                                syncFileInput();
+                                syncAltTextInputs();
+
+                                render();
+
+                            }
+                        );
+
+
+                        row.appendChild(removeBtn);
+
+                        queueList.appendChild(row);
+
+                    });
+
+                }
+
+
+                function addFiles(fileList) {
+
+                    Array.from(fileList).forEach(
+                        function (file) {
+
+                            var key =
+                                keyOf(file);
+
+                            if (
+                                !queue.some(
+                                    function (item) {
+
+                                        return keyOf(item.file) === key;
+
+                                    }
+                                )
+                            ) {
+
+                                queue.push({
+                                    file: file,
+                                    altText: ''
+                                });
+
+                            }
+
+                        }
+                    );
+
+
+                    syncFileInput();
+                    syncAltTextInputs();
+
+                    render();
+
+                }
+
+
+                ['dragenter', 'dragover'].forEach(
+                    function (evt) {
+
+                        drop.addEventListener(
+                            evt,
+                            function (e) {
+
+                                e.preventDefault();
+
+                                drop.classList.add(
+                                    'epx-drag'
+                                );
+
+                            }
+                        );
+
+                    }
+                );
+
+
+                ['dragleave', 'drop'].forEach(
+                    function (evt) {
+
+                        drop.addEventListener(
+                            evt,
+                            function (e) {
+
+                                e.preventDefault();
+
+                                drop.classList.remove(
+                                    'epx-drag'
+                                );
+
+                            }
+                        );
+
+                    }
+                );
+
+
+                drop.addEventListener(
+                    'drop',
+                    function (e) {
+
+                        if (
+                            e.dataTransfer.files &&
+                            e.dataTransfer.files.length
+                        ) {
+
+                            addFiles(
+                                e.dataTransfer.files
+                            );
+
+                        }
+
+                    }
+                );
+
+
+                input.addEventListener(
+                    'click',
+                    function () {
+
+                        input.value = '';
+
+                    }
+                );
+
+
+                input.addEventListener(
+                    'change',
+                    function () {
+
+                        if (
+                            input.files &&
+                            input.files.length
+                        ) {
+
+                            addFiles(input.files);
+
+                        }
+
+                    }
+                );
+
+
+            })();
+
+
+            // =========================================================
+            // SALE PRICE VALIDATION
+            // =========================================================
+
+            document.addEventListener(
+                "DOMContentLoaded",
+                function () {
+
+                    const priceInput =
+                        document.getElementById(
+                            "Product_Price"
+                        );
+
+                    const salePriceInput =
+                        document.getElementById(
+                            "Product_SalePrice"
+                        );
+
+                    const salePriceError =
+                        document.getElementById(
+                            "salePriceError"
+                        );
+
+                    const salePriceWrapper =
+                        document.getElementById(
+                            "salePriceWrapper"
+                        );
+
+
+                    if (
+                        !priceInput ||
+                        !salePriceInput ||
+                        !salePriceError ||
+                        !salePriceWrapper
+                    ) {
+                        return;
+                    }
+
+
+                    function clearSalePriceError() {
+
+                        salePriceError.textContent = '';
+
+                        salePriceInput.classList.remove(
+                            'epx-sale-invalid'
+                        );
+
+                        salePriceWrapper.classList.remove(
+                            'epx-sale-invalid'
+                        );
+
+                    }
+
+
+                    function validateSalePrice() {
+
+                        const price =
+                            parseFloat(
+                                priceInput.value
+                            );
+
+                        const salePrice =
+                            parseFloat(
+                                salePriceInput.value
+                            );
+
+
+                        // Empty sale price is allowed.
+                        if (
+                            salePriceInput.value === '' ||
+                            isNaN(salePrice)
+                        ) {
+
+                            clearSalePriceError();
+
+                            return true;
+
+                        }
+
+
+                        if (salePrice <= 0) {
+
+                            salePriceError.textContent =
+                                'Sale price must be greater than zero.';
+
+                            salePriceInput.classList.add(
+                                'epx-sale-invalid'
+                            );
+
+                            salePriceWrapper.classList.add(
+                                'epx-sale-invalid'
+                            );
+
+                            return false;
+
+                        }
+
+
+                        if (
+                            !isNaN(price) &&
+                            salePrice >= price
+                        ) {
+
+                            salePriceError.textContent =
+                                'Sale price must be lower than the regular price.';
+
+                            salePriceInput.classList.add(
+                                'epx-sale-invalid'
+                            );
+
+                            salePriceWrapper.classList.add(
+                                'epx-sale-invalid'
+                            );
+
+                            return false;
+
+                        }
+
+
+                        clearSalePriceError();
+
+                        return true;
+
+                    }
+
+
+                    salePriceInput.addEventListener(
+                        'input',
+                        validateSalePrice
+                    );
+
+
+                    priceInput.addEventListener(
+                        'input',
+                        validateSalePrice
+                    );
+
+
+                    const form =
+                        salePriceInput.closest('form');
+
+
+                    if (form) {
+
+                        form.addEventListener(
+                            'submit',
+                            function (event) {
+
+                                if (!validateSalePrice()) {
+
+                                    event.preventDefault();
+
+                                    salePriceInput.focus();
+
+                                }
+
+                            }
+                        );
+
+                    }
+
+
+                    validateSalePrice();
+
+                }
+            );
+
+        })();
+
+    </script>
+}
+

@@ -1,0 +1,588 @@
+﻿@model List<ECommerce.Web.DTOs.CampaignDto>
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Campaigns";
+
+    var now = DateTime.UtcNow;
+
+    var totalCampaigns = Model.Count;
+    var activeCampaigns = Model.Count(c =>
+        c.IsActive &&
+        now >= c.StartDate &&
+        now <= c.EndDate);
+
+    var upcomingCampaigns = Model.Count(c =>
+        c.IsActive &&
+        now < c.StartDate);
+
+    var expiredCampaigns = Model.Count(c =>
+        now > c.EndDate);
+}
+
+<div class="container-fluid px-0">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-2">
+                    <i class="bi bi-megaphone-fill fs-5"></i>
+                </div>
+
+                <h2 class="fw-bold mb-0">
+                    Campaigns
+                </h2>
+            </div>
+
+            <p class="text-muted mb-0">
+                Manage automatic promotional campaigns and discounts.
+            </p>
+        </div>
+
+        <a asp-area="Admin"
+           asp-controller="Campaigns"
+           asp-action="Create"
+           class="btn btn-primary px-4">
+
+            <i class="bi bi-plus-lg me-1"></i>
+            Create Campaign
+
+        </a>
+
+    </div>
+
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+
+        <!-- Total -->
+        <div class="col-sm-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-start">
+
+                        <div>
+                            <p class="text-muted small mb-1">
+                                Total Campaigns
+                            </p>
+
+                            <h3 class="fw-bold mb-0">
+                                @totalCampaigns
+                            </h3>
+                        </div>
+
+                        <div class="rounded-3 bg-primary bg-opacity-10
+                                    text-primary p-2">
+                            <i class="bi bi-megaphone fs-5"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Active -->
+        <div class="col-sm-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-start">
+
+                        <div>
+                            <p class="text-muted small mb-1">
+                                Active Now
+                            </p>
+
+                            <h3 class="fw-bold text-success mb-0">
+                                @activeCampaigns
+                            </h3>
+                        </div>
+
+                        <div class="rounded-3 bg-success bg-opacity-10
+                                    text-success p-2">
+                            <i class="bi bi-lightning-charge fs-5"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Upcoming -->
+        <div class="col-sm-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-start">
+
+                        <div>
+                            <p class="text-muted small mb-1">
+                                Upcoming
+                            </p>
+
+                            <h3 class="fw-bold text-info mb-0">
+                                @upcomingCampaigns
+                            </h3>
+                        </div>
+
+                        <div class="rounded-3 bg-info bg-opacity-10
+                                    text-info p-2">
+                            <i class="bi bi-calendar-event fs-5"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Expired -->
+        <div class="col-sm-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-start">
+
+                        <div>
+                            <p class="text-muted small mb-1">
+                                Expired
+                            </p>
+
+                            <h3 class="fw-bold text-secondary mb-0">
+                                @expiredCampaigns
+                            </h3>
+                        </div>
+
+                        <div class="rounded-3 bg-secondary bg-opacity-10
+                                    text-secondary p-2">
+                            <i class="bi bi-clock-history fs-5"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Alerts -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show
+                        border-0 shadow-sm"
+             role="alert">
+
+            <i class="bi bi-check-circle-fill me-2"></i>
+
+            @TempData["Success"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert">
+            </button>
+
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show
+                        border-0 shadow-sm"
+             role="alert">
+
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+
+            @TempData["Error"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert">
+            </button>
+
+        </div>
+    }
+
+
+    <!-- Empty State -->
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-body text-center py-5">
+
+                <div class="rounded-circle bg-primary bg-opacity-10
+                                text-primary d-inline-flex p-4 mb-3">
+
+                    <i class="bi bi-megaphone fs-1"></i>
+
+                </div>
+
+                <h4 class="fw-bold">
+                    No campaigns yet
+                </h4>
+
+                <p class="text-muted mb-4">
+                    Create your first promotional campaign
+                    to automatically discount selected products
+                    or categories.
+                </p>
+
+                <a asp-area="Admin"
+                   asp-controller="Campaigns"
+                   asp-action="Create"
+                   class="btn btn-primary px-4">
+
+                    <i class="bi bi-plus-lg me-1"></i>
+                    Create Your First Campaign
+
+                </a>
+
+            </div>
+
+        </div>
+    }
+    else
+    {
+        <!-- Campaign List -->
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-header bg-white border-0 py-3">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+                        <h5 class="fw-bold mb-1">
+                            All Campaigns
+                        </h5>
+
+                        <small class="text-muted">
+                            @totalCampaigns campaign(s) configured
+                        </small>
+                    </div>
+
+                    <span class="badge bg-light text-dark border">
+                        <i class="bi bi-list-ul me-1"></i>
+                        Campaign List
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-responsive">
+
+                <table class="table align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th class="ps-4">
+                                Campaign
+                            </th>
+
+                            <th>
+                                Discount
+                            </th>
+
+                            <th>
+                                Schedule
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Targets
+                            </th>
+
+                            <th class="text-end pe-4">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @foreach (var campaign in Model)
+                        {
+                            string status;
+                            string statusClass;
+                            string statusIcon;
+
+                            if (!campaign.IsActive)
+                            {
+                                status = "Inactive";
+                                statusClass = "bg-warning text-dark";
+                                statusIcon = "bi-pause-circle";
+                            }
+                            else if (now < campaign.StartDate)
+                            {
+                                status = "Upcoming";
+                                statusClass = "bg-info-subtle text-info-emphasis";
+                                statusIcon = "bi-calendar-event";
+                            }
+                            else if (now > campaign.EndDate)
+                            {
+                                status = "Expired";
+                                statusClass = "bg-secondary-subtle text-secondary";
+                                statusIcon = "bi-clock-history";
+                            }
+                            else
+                            {
+                                status = "Active";
+                                statusClass = "bg-success-subtle text-success";
+                                statusIcon = "bi-check-circle";
+                            }
+
+
+                            <tr>
+
+                                <!-- Campaign -->
+                                <td class="ps-4">
+
+                                    <div class="d-flex align-items-center">
+
+                                        <div class="rounded-3 bg-primary bg-opacity-10
+                                                            text-primary p-2 me-3">
+
+                                            <i class="bi bi-megaphone"></i>
+
+                                        </div>
+
+                                        <div>
+
+                                            <div class="fw-semibold">
+                                                @campaign.Name
+                                            </div>
+
+                                            @if (!string.IsNullOrWhiteSpace(
+                                                                                campaign.Description))
+                                            {
+                                                <div class="small text-muted
+                                                                        text-truncate"
+                                                     style="max-width: 260px;"
+                                                     title="@campaign.Description">
+
+                                                    @campaign.Description
+
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="small text-muted">
+                                                    No description
+                                                </div>
+                                            }
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- Discount -->
+                                <td>
+
+                                    @if (campaign.DiscountType == 1)
+                                    {
+                                        <span class="badge bg-primary-subtle
+                                                                 text-primary fs-6 px-3 py-2">
+
+                                            <i class="bi bi-percent me-1"></i>
+                                            @($"{campaign.DiscountValue:0.##} OFF")
+
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-primary-subtle
+                                                                 text-primary fs-6 px-3 py-2">
+
+                                            <i class="bi bi-cash me-1"></i>
+                                            @($"${campaign.DiscountValue:0.##} OFF")
+
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                            <!-- Schedule -->
+                            <td>
+
+                                <div class="small">
+
+                                    <div class="d-flex align-items-center mb-2">
+
+                                        <i class="bi bi-play-circle-fill text-success me-2"></i>
+
+                                        <div>
+                                            <div class="text-muted small">
+                                                START
+                                            </div>
+
+                                            <span class="fw-semibold">
+                                                @(campaign.StartDate.ToLocalTime()
+                                                                                            .ToString("MMM dd, yyyy • HH:mm"))
+                                                                                                                          </span>
+                                                                                                                      </div>
+
+                                    </div>
+
+                                    <div class="d-flex align-items-center">
+
+                                        <i class="bi bi-stop-circle-fill text-danger me-2"></i>
+
+                                        <div>
+                                            <div class="text-muted small">
+                                                END
+                                            </div>
+
+                                            <span class="fw-semibold">
+                                                @(campaign.EndDate.ToLocalTime()
+                                                                                            .ToString("MMM dd, yyyy • HH:mm"))
+                                        </span>
+                                    </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                                <!-- Status -->
+                                <td>
+
+                                    <span class="badge @statusClass px-3 py-2">
+
+                                        <i class="bi @statusIcon me-1"></i>
+
+                                        @status
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- Targets -->
+                                <td>
+
+                                    <div class="d-flex flex-column gap-1">
+
+                                        <span class="small">
+
+                                            <i class="bi bi-box-seam
+                                                              text-primary me-1">
+                                            </i>
+
+                                            <strong>
+                                                @campaign.ProductIds.Count
+                                            </strong>
+
+                                            product(s)
+
+                                        </span>
+
+                                        <span class="small">
+
+                                            <i class="bi bi-folder
+                                                              text-secondary me-1">
+                                            </i>
+
+                                            <strong>
+                                                @campaign.CategoryIds.Count
+                                            </strong>
+
+                                            category(s)
+
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- Actions -->
+                                <td class="text-end pe-4">
+
+                                    <div class="btn-group"
+                                         role="group">
+
+                                        <a asp-action="Edit"
+                                           asp-route-id="@campaign.Id"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Edit campaign">
+
+                                            <i class="bi bi-pencil"></i>
+
+                                        </a>
+
+                                        <form asp-action="Delete"
+                                              asp-route-id="@campaign.Id"
+                                              method="post"
+                                              class="d-inline"
+                                              onsubmit="return confirm(
+                                                          'Are you sure you want to delete this campaign?');">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    title="Delete campaign">
+
+                                                <i class="bi bi-trash"></i>
+
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    }
+
+</div>

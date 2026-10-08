@@ -1,0 +1,102 @@
+﻿@model List<ECommerce.Web.DTOs.AdminRefundRequestDto>
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Refund Requests";
+
+    string StatusBadgeClass(string? status) => status?.ToLower() switch
+    {
+        "pending" => "bg-warning text-dark",
+        "approved" => "bg-success",
+        "rejected" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
+
+<div class="container-fluid">
+
+    @if (TempData["RefundReviewResult"] != null)
+    {
+        <div class="alert alert-info">@TempData["RefundReviewResult"]</div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">💸 Refund Requests</h2>
+            <p class="text-muted">Review customer-submitted refund requests.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Requests</h5>
+        </div>
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <p class="text-muted mb-0">No refund requests yet.</p>
+            }
+            else
+            {
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Order</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Requested</th>
+                            <th width="260">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model)
+                        {
+                            <tr>
+                                <td>#@r.Id</td>
+                                <td>
+                                    <a asp-area="Admin" asp-controller="Orders" asp-action="Details" asp-route-id="@r.OrderId">
+                                        #@r.OrderId
+                                    </a>
+                                </td>
+                                <td>@r.CustomerName</td>
+                                <td>$@r.OrderTotal</td>
+                                <td style="max-width: 260px;">@r.Reason</td>
+                                <td>
+                                    <span class="badge @StatusBadgeClass(r.Status)">@r.Status</span>
+                                    @if (!string.IsNullOrWhiteSpace(r.AdminNote))
+                                    {
+                                        <div class="text-muted small mt-1">Note: @r.AdminNote</div>
+                                    }
+                                </td>
+                                <td>@r.RequestedAt.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    @if (string.Equals(r.Status, "Pending", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <form asp-action="Approve" asp-route-id="@r.Id" method="post" class="d-inline"
+                                              onsubmit="return confirm('Approve this refund? This will issue a real Stripe refund for the full order amount.');">
+                                            <input type="hidden" name="adminNote" value="" />
+                                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                        </form>
+                                        <form asp-action="Reject" asp-route-id="@r.Id" method="post" class="d-inline"
+                                              onsubmit="return confirm('Reject this refund request?');">
+                                            <input type="hidden" name="adminNote" value="" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">Reject</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">
+                                            Reviewed @r.ReviewedAt?.ToString("yyyy-MM-dd")
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>

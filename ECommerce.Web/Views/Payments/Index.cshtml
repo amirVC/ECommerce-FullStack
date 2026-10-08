@@ -1,0 +1,62 @@
+﻿@model List<ECommerce.Web.DTOs.PaymentDto>
+
+@{
+    ViewData["Title"] = "My Payments";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4">My Payments</h2>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">You don't have any payments yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Order</th>
+                        <th>Provider</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Refunded</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var payment in Model.OrderByDescending(p => p.CreatedAt))
+                    {
+                        <tr>
+                            <td>@payment.CreatedAt.ToLocalTime().ToString("g")</td>
+                            <td>
+                                <a asp-controller="Orders" asp-action="Details" asp-route-id="@payment.OrderId">
+                                    #@payment.OrderId
+                                </a>
+                            </td>
+                            <td>@payment.Provider</td>
+                            <td>@payment.Amount.ToString("C") <span class="text-muted">@payment.Currency.ToUpper()</span></td>
+                            <td>
+                                @{
+                                    var badgeClass = payment.Status switch
+                                    {
+                                        ECommerce.Web.DTOs.PaymentStatus.Succeeded => "bg-success",
+                                        ECommerce.Web.DTOs.PaymentStatus.Pending => "bg-warning text-dark",
+                                        ECommerce.Web.DTOs.PaymentStatus.Failed => "bg-danger",
+                                        ECommerce.Web.DTOs.PaymentStatus.Refunded => "bg-secondary",
+                                        ECommerce.Web.DTOs.PaymentStatus.PartiallyRefunded => "bg-info text-dark",
+                                        ECommerce.Web.DTOs.PaymentStatus.Canceled => "bg-dark",
+                                        _ => "bg-light text-dark"
+                                    };
+                                }
+                                <span class="badge @badgeClass">@payment.Status</span>
+                            </td>
+                            <td>@(payment.RefundedAmount > 0 ? payment.RefundedAmount.ToString("C") : "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

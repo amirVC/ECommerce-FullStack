@@ -1,0 +1,36 @@
+﻿@model ECommerce.Web.ViewModels.VerifyCodeViewModel
+@{
+    ViewData["Title"] = "Two-Factor Verification";
+}
+<div class="container mt-5" style="max-width:500px;">
+    <h2 class="mb-3">Two-Factor Verification</h2>
+    <p class="text-muted mb-4">
+        Enter the 6-digit code from your authenticator app to finish signing in.
+    </p>
+    <form asp-action="VerifyTotp" method="post">
+        <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+        <input type="hidden" asp-for="ChallengeToken" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="mb-3">
+            <label asp-for="Code" class="form-label">Authenticator code</label>
+            <input asp-for="Code"
+                   class="form-control"
+                   inputmode="numeric"
+                   autocomplete="one-time-code"
+                   maxlength="6"
+                   autofocus />
+            <span asp-validation-for="Code" class="text-danger"></span>
+        </div>
+        <button class="btn btn-dark w-100">
+            Verify
+        </button>
+        <div class="text-center mt-3">
+            <a asp-controller="Account" asp-action="Login">
+                Back to login
+            </a>
+        </div>
+    </form>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

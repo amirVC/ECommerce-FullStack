@@ -1,0 +1,99 @@
+﻿@model ECommerce.Web.DTOs.ShipmentDto
+@{
+    ViewData["Title"] = "Manage Shipment";
+    int orderId = ViewBag.OrderId;
+}
+
+<div class="container mt-4">
+    <h2>Shipment — Order #@orderId</h2>
+    <a asp-area="Admin" asp-controller="Orders" asp-action="Details" asp-route-id="@orderId" class="btn btn-link mb-3 ps-0">
+        &laquo; Back to Order
+    </a>
+
+    @if (Model == null)
+    {
+        <div class="card">
+            <div class="card-header">Create Shipment</div>
+            <div class="card-body">
+                <form asp-action="Create" asp-route-orderId="@orderId" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Carrier</label>
+                        <input type="text" name="carrier" class="form-control" placeholder="e.g. UPS, FedEx, USPS, DHL" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tracking Number</label>
+                        <input type="text" name="trackingNumber" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Shipment</button>
+                </form>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                Current Status: <span class="badge bg-info text-dark">@Model.Status</span>
+            </div>
+            <div class="card-body">
+                <p><strong>Carrier:</strong> @Model.Carrier</p>
+                <p><strong>Tracking Number:</strong> @Model.TrackingNumber</p>
+                @if (Model.ShippedAt != null)
+                {
+                    <p><strong>Shipped:</strong> @Model.ShippedAt.Value.ToString("yyyy-MM-dd")</p>
+                }
+                @if (Model.DeliveredAt != null)
+                {
+                    <p><strong>Delivered:</strong> @Model.DeliveredAt.Value.ToString("yyyy-MM-dd")</p>
+                }
+
+                <hr />
+                <h6>History</h6>
+                <ul class="list-group mb-3">
+                    @foreach (var h in Model.History.OrderByDescending(x => x.ChangedAt))
+                    {
+                        <li class="list-group-item">
+                            <strong>@h.Status</strong> — @h.ChangedAt.ToString("yyyy-MM-dd HH:mm")
+                            @if (!string.IsNullOrWhiteSpace(h.Note))
+                            {
+                                <div class="small text-muted">@h.Note</div>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Update Status</div>
+            <div class="card-body">
+                <form asp-action="UpdateStatus" asp-route-orderId="@orderId" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="Processing">Processing</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="InTransit">In Transit</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="FailedAttempt">Failed Attempt</option>
+                            <option value="Returned">Returned</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Carrier</label>
+                        <input type="text" name="carrier" class="form-control" value="@Model.Carrier" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tracking Number</label>
+                        <input type="text" name="trackingNumber" class="form-control" value="@Model.TrackingNumber" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Note (optional)</label>
+                        <textarea name="note" class="form-control" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </form>
+            </div>
+        </div>
+    }
+</div>

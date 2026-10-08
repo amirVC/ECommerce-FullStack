@@ -6,6 +6,9 @@
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
 
+        // Product snapshot
+        public string SKU { get; set; } = string.Empty;
+
         // Foreign Keys
         public int OrderId { get; set; }
         public Order Order { get; set; } = null!;

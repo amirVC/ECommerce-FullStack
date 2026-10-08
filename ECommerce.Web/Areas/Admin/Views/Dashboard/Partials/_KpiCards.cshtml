@@ -1,0 +1,248 @@
+﻿@model ECommerce.Web.DTOs.DashboardResponseDto
+
+<div class="row g-4 mb-4">
+
+    <!-- Products -->
+
+    <div class="col-xl-3 col-lg-6">
+
+        <div class="dashboard-card">
+
+            <div class="card-icon bg-primary">
+
+                <i class="bi bi-box-seam"></i>
+
+            </div>
+
+            <div>
+
+                <div class="card-title">
+                    Products
+                </div>
+
+                <div class="card-value">
+                    @Model.Statistics.TotalProducts
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Categories -->
+
+    <div class="col-xl-3 col-lg-6">
+
+        <div class="dashboard-card">
+
+            <div class="card-icon bg-success">
+
+                <i class="bi bi-grid"></i>
+
+            </div>
+
+            <div>
+
+                <div class="card-title">
+                    Categories
+                </div>
+
+                <div class="card-value">
+                    @Model.Statistics.TotalCategories
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Users -->
+
+    <div class="col-xl-3 col-lg-6">
+
+        <div class="dashboard-card">
+
+            <div class="card-icon bg-warning">
+
+                <i class="bi bi-people-fill"></i>
+
+            </div>
+
+            <div>
+
+                <div class="card-title">
+                    Users
+                </div>
+
+                <div class="card-value">
+                    @Model.Statistics.TotalUsers
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Orders -->
+
+    <div class="col-xl-3 col-lg-6">
+
+        <div class="dashboard-card">
+
+            <div class="card-icon bg-danger">
+
+                <i class="bi bi-cart-fill"></i>
+
+            </div>
+
+            <div>
+
+                <div class="card-title">
+                    Orders
+                </div>
+
+                <div class="card-value">
+                    @Model.Statistics.TotalOrders
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<div class="row g-4 mt-1">
+
+    <!-- Revenue -->
+
+    <div class="col-xl-3 col-lg-6">
+
+        <div class="dashboard-card">
+
+            <div class="card-icon bg-success">
+
+                <i class="bi bi-currency-dollar"></i>
+
+            </div>
+
+            <div>
+
+                <div class="card-title">
+
+                    Revenue
+
+                </div>
+
+                <div class="card-value">
+
+                    $@Model.Statistics.TotalRevenue.ToString("N0")
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Pending -->
+
+    <div class="col-xl-3 col-lg-6">
+
+        <div class="dashboard-card">
+
+            <div class="card-icon bg-warning">
+
+                <i class="bi bi-hourglass-split"></i>
+
+            </div>
+
+            <div>
+
+                <div class="card-title">
+
+                    Pending Orders
+
+                </div>
+
+                <div class="card-value">
+
+                    @Model.Statistics.PendingOrders
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Delivered -->
+
+    <div class="col-xl-3 col-lg-6">
+
+        <div class="dashboard-card">
+
+            <div class="card-icon bg-primary">
+
+                <i class="bi bi-check-circle-fill"></i>
+
+            </div>
+
+            <div>
+
+                <div class="card-title">
+
+                    Delivered
+
+                </div>
+
+                <div class="card-value">
+
+                    @Model.Statistics.DeliveredOrders
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Cancelled -->
+
+    <div class="col-xl-3 col-lg-6">
+
+        <div class="dashboard-card">
+
+            <div class="card-icon bg-danger">
+
+                <i class="bi bi-x-circle-fill"></i>
+
+            </div>
+
+            <div>
+
+                <div class="card-title">
+
+                    Cancelled
+
+                </div>
+
+                <div class="card-value">
+
+                    @Model.Statistics.CancelledOrders
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
