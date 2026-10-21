@@ -63,6 +63,9 @@ public class AdminProductService : IAdminProductService
     }
     public async Task<PagedResultDto<AdminProductResponseDto>> SearchAsync(ProductSearchDto dto)
     {
+        dto.Page = dto.Page < 1 ? 1 : dto.Page;
+        dto.PageSize = dto.PageSize < 1 ? 20 : dto.PageSize;
+
         var query = _context.Products
             .AsNoTracking()
             .Include(p => p.Category)
@@ -117,7 +120,7 @@ public class AdminProductService : IAdminProductService
             .FirstOrDefaultAsync(c => c.Id == dto.CategoryId);
 
         if (category == null)
-            throw new Exception("Category not found.");
+            throw new NotFoundException("Category not found.");
 
         ValidateSalePricing(dto.Price, dto.SalePrice, dto.SaleStartDate, dto.SaleEndDate);
 
@@ -165,7 +168,7 @@ public class AdminProductService : IAdminProductService
         }
         _context.Products.Add(product);
 
-        await _context.SaveChangesAsync();
+        await SaveProductAsync(sku);
 
         return new AdminProductResponseDto
         {
@@ -248,7 +251,7 @@ public class AdminProductService : IAdminProductService
                 _imageService.DeleteProductThumbnail(product.ThumbnailUrl);
             }
             product.ImageUrl = dto.ImageUrl;
-            product.ThumbnailUrl = null; 
+            product.ThumbnailUrl = null;
 
             if (currentPrimary != null)
             {
@@ -286,7 +289,7 @@ public class AdminProductService : IAdminProductService
         product.SaleStartDate = ToUtc(dto.SaleStartDate);
         product.SaleEndDate = ToUtc(dto.SaleEndDate);
 
-        await _context.SaveChangesAsync();
+        await SaveProductAsync(sku);
 
         return new AdminProductResponseDto
         {
@@ -346,6 +349,23 @@ public class AdminProductService : IAdminProductService
             SaleStartDate = product.SaleStartDate,
             SaleEndDate = product.SaleEndDate
         };
+    }
+
+    // Two admins can save the same SKU at the same moment and both pass the
+    // AnyAsync check. The unique index then rejects the second one; turn that
+    // into the same friendly 400 instead of a 500.
+    private async Task SaveProductAsync(string sku)
+    {
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is Npgsql.PostgresException { SqlState: Npgsql.PostgresErrorCodes.UniqueViolation } pg &&
+            (pg.ConstraintName?.Contains("SKU", StringComparison.OrdinalIgnoreCase) ?? false))
+        {
+            throw new BadRequestException($"A product with SKU '{sku}' already exists.");
+        }
     }
 
     private static string NormalizeSku(string sku)

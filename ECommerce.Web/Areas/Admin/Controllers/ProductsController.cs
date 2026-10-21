@@ -1,4 +1,5 @@
 ﻿using ECommerce.Web.DTOs;
+using ECommerce.Web.Exceptions;
 using ECommerce.Web.Interfaces;
 using ECommerce.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -48,101 +49,61 @@ public class ProductsController : Controller
         return View(model);
     }
 
-
-[HttpPost]
-public async Task<IActionResult> Create(
-    AdminCreateProductViewModel model)
+    [HttpPost]
+    public async Task<IActionResult> Create(AdminCreateProductViewModel model)
     {
-        // ---------------------------------------------------------
         // 1. MVC validation
-        // ---------------------------------------------------------
-
         if (!ModelState.IsValid)
         {
-            model.Categories =
-                await _categoryService.GetAllAsync();
-
+            model.Categories = await _categoryService.GetAllAsync();
             return View("Create", model);
         }
 
-
-        // ---------------------------------------------------------
-        // 2. Try to create the product through the API
-        // ---------------------------------------------------------
+        // 2. Create the product through the API
+        AdminProductDto createdProduct;
 
         try
         {
-            var createdProduct =
-                await _productService.CreateAsync(
-                    model.Product,
-                    model.ImageFile);
-
-
-            // -----------------------------------------------------
-            // 3. Upload gallery images
-            // -----------------------------------------------------
-
-            if (model.GalleryImages != null &&
-                model.GalleryImages.Any())
-            {
-                for (int i = 0;
-                     i < model.GalleryImages.Count;
-                     i++)
-                {
-                    var file = model.GalleryImages[i];
-
-                    if (file == null || file.Length <= 0)
-                        continue;
-
-                    var altText =
-                        model.GalleryAltTexts != null &&
-                        i < model.GalleryAltTexts.Count
-                            ? model.GalleryAltTexts[i]
-                            : string.Empty;
-
-                    if (string.IsNullOrWhiteSpace(altText))
-                    {
-                        altText =
-                            model.Product.Name ??
-                            string.Empty;
-                    }
-
-                    var galleryImageModel =
-                        new AdminCreateProductImageViewModel
-                        {
-                            ImageFile = file,
-                            AltText = altText
-                        };
-
-                    await _productService.AddImageAsync(
-                        createdProduct.Id,
-                        galleryImageModel);
-                }
-            }
-
-
-            // -----------------------------------------------------
-            // 4. Success
-            // -----------------------------------------------------
-
-            TempData["SuccessMessage"] =
-                "Product created successfully.";
-
-            return RedirectToAction(nameof(Index));
+            createdProduct = await _productService.CreateAsync(
+                model.Product,
+                model.ImageFile);
+        }
+        catch (ApiException ex)
+        {
+            // API message, e.g. "A product with SKU 'X' already exists."
+            AddProductError(ex.Message);
+            model.Categories = await _categoryService.GetAllAsync();
+            return View("Create", model);
         }
         catch (HttpRequestException)
         {
-            // Friendly error instead of ASP.NET exception page.
-
             ModelState.AddModelError(
-                "Product.SalePrice",
-                "The sale price must be lower than the regular price.");
+                string.Empty,
+                "The product could not be saved. Please check the values and try again.");
 
-            model.Categories =
-                await _categoryService.GetAllAsync();
-
+            model.Categories = await _categoryService.GetAllAsync();
             return View("Create", model);
         }
+
+        // 3. Upload gallery images.
+        // The product already exists at this point, so a failure here must NOT
+        // send the user back to the Create form (re-submitting would fail with
+        // "SKU already exists"). Send them to Edit instead.
+        try
+        {
+            await UploadGalleryImagesAsync(createdProduct.Id, model);
+        }
+        catch (Exception)
+        {
+            TempData["ErrorMessage"] =
+                "Product was created, but some gallery images failed to upload. You can add them here.";
+
+            return RedirectToAction(nameof(Edit), new { id = createdProduct.Id });
+        }
+
+        // 4. Success
+        TempData["SuccessMessage"] = "Product created successfully.";
+        return RedirectToAction(nameof(Index));
     }
 
     public async Task<IActionResult> Edit(int id)
@@ -163,39 +124,19 @@ public async Task<IActionResult> Create(
         return View(model);
     }
 
-
-[HttpPost]
-public async Task<IActionResult> Edit(
-    int id,
-    AdminEditProductViewModel model)
+    [HttpPost]
+    public async Task<IActionResult> Edit(
+        int id,
+        AdminEditProductViewModel model)
     {
-        // ---------------------------------------------------------
-        // 1. Client-side / MVC validation
-        // ---------------------------------------------------------
-
+        // 1. MVC validation
         if (!ModelState.IsValid)
         {
-            model.Categories = await _categoryService.GetAllAsync();
-            model.Images = await _productService.GetImagesAsync(id);
-
-            // ImageUrl is not posted by the Edit form because the
-            // current cover is managed through the gallery.
-            // Restore it so the cover does not disappear.
-            var existing = await _productService.GetByIdAsync(id);
-
-            if (existing != null)
-            {
-                model.Product.ImageUrl = existing.ImageUrl;
-            }
-
+            await ReloadEditModelAsync(id, model);
             return View("Edit", model);
         }
 
-
-        // ---------------------------------------------------------
-        // 2. Try to update the product through the API
-        // ---------------------------------------------------------
-
+        // 2. Update through the API
         try
         {
             await _productService.UpdateAsync(
@@ -203,40 +144,25 @@ public async Task<IActionResult> Edit(
                 model.Product,
                 model.ImageFile);
         }
+        catch (ApiException ex)
+        {
+            AddProductError(ex.Message);
+            await ReloadEditModelAsync(id, model);
+            return View("Edit", model);
+        }
         catch (HttpRequestException)
         {
-            // The API rejected the data.
-            // Show a friendly validation message instead of
-            // displaying the ASP.NET exception page.
-
             ModelState.AddModelError(
-                "Product.SalePrice",
-                "The sale price must be lower than the regular price.");
+                string.Empty,
+                "The product could not be saved. Please check the values and try again.");
 
-            model.Categories = await _categoryService.GetAllAsync();
-            model.Images = await _productService.GetImagesAsync(id);
-
-            var existing = await _productService.GetByIdAsync(id);
-
-            if (existing != null)
-            {
-                model.Product.ImageUrl = existing.ImageUrl;
-            }
-
+            await ReloadEditModelAsync(id, model);
             return View("Edit", model);
         }
 
-
-        // ---------------------------------------------------------
         // 3. Success
-        // ---------------------------------------------------------
-
-        TempData["SuccessMessage"] =
-            "Product updated successfully.";
-
-        return RedirectToAction(
-            nameof(Edit),
-            new { id });
+        TempData["SuccessMessage"] = "Product updated successfully.";
+        return RedirectToAction(nameof(Edit), new { id });
     }
 
     [HttpPost]
@@ -247,8 +173,6 @@ public async Task<IActionResult> Edit(
         return RedirectToAction(nameof(Index));
     }
 
-    // Now accepts multiple files, same pattern as the Create action's
-    // GalleryImages loop, instead of being limited to a single ImageFile.
     [HttpPost]
     public async Task<IActionResult> UploadImage(
         int productId,
@@ -297,14 +221,92 @@ public async Task<IActionResult> Edit(
 
     [HttpPost]
     public async Task<IActionResult> UpdateImageAltText(
-    int productId,
-    int imageId,
-    string? altText)
+        int productId,
+        int imageId,
+        string? altText)
     {
-        // This calls the service method we updated previously
         await _productService.UpdateImageAltTextAsync(imageId, altText ?? string.Empty);
 
-        // This redirects the user back to the edit page after the save
         return RedirectToAction(nameof(Edit), new { id = productId });
+    }
+
+    // ---------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------
+
+    /// <summary>
+    /// Puts an API error message next to the field it belongs to.
+    /// </summary>
+    private void AddProductError(string message)
+    {
+        if (message.Contains("SKU", StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError("Product.SKU", message);
+        }
+        else if (message.Contains("sale price", StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError("Product.SalePrice", message);
+        }
+        else if (message.Contains("sale end", StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError("Product.SaleEndDate", message);
+        }
+        else
+        {
+            ModelState.AddModelError(string.Empty, message);
+        }
+    }
+
+    /// <summary>
+    /// Re-populates everything the Edit view needs when it is shown again
+    /// after a validation or API error.
+    /// </summary>
+    private async Task ReloadEditModelAsync(int id, AdminEditProductViewModel model)
+    {
+        model.Categories = await _categoryService.GetAllAsync();
+        model.Images = await _productService.GetImagesAsync(id);
+
+        // ImageUrl is not posted by the Edit form because the current cover
+        // is managed through the gallery. Restore it so it does not disappear.
+        var existing = await _productService.GetByIdAsync(id);
+
+        if (existing != null)
+        {
+            model.Product.ImageUrl = existing.ImageUrl;
+        }
+    }
+
+    private async Task UploadGalleryImagesAsync(
+        int productId,
+        AdminCreateProductViewModel model)
+    {
+        if (model.GalleryImages == null || !model.GalleryImages.Any())
+            return;
+
+        for (int i = 0; i < model.GalleryImages.Count; i++)
+        {
+            var file = model.GalleryImages[i];
+
+            if (file == null || file.Length <= 0)
+                continue;
+
+            var altText =
+                model.GalleryAltTexts != null && i < model.GalleryAltTexts.Count
+                    ? model.GalleryAltTexts[i]
+                    : string.Empty;
+
+            if (string.IsNullOrWhiteSpace(altText))
+            {
+                altText = model.Product.Name ?? string.Empty;
+            }
+
+            await _productService.AddImageAsync(
+                productId,
+                new AdminCreateProductImageViewModel
+                {
+                    ImageFile = file,
+                    AltText = altText
+                });
+        }
     }
 }

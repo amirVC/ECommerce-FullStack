@@ -402,6 +402,7 @@
     </div>
 
     <form asp-action="Create"
+
           method="post"
           enctype="multipart/form-data"
           class="epx-grid">
@@ -423,6 +424,8 @@
 
                     <input asp-for="Product.SKU"
                            class="epx-input"
+                           maxlength="50"
+                           style="text-transform:uppercase"
                            placeholder="e.g. HDPH-BLK-001" />
 
                     <span asp-validation-for="Product.SKU"
