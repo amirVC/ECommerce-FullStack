@@ -4,11 +4,9 @@ namespace ECommerceAPI.Models
     {
         public int Id { get; set; }
 
-        // Public API identifier.
         public Guid PublicId { get; set; } = Guid.NewGuid();
         public string Name { get; set; } = string.Empty;
-
-        // Navigation
+        public string? Slug { get; set; }
         public ICollection<Product> Products { get; set; } = new List<Product>();
     }
 }

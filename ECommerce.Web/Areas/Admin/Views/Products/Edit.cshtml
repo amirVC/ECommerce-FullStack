@@ -628,6 +628,27 @@
 
                     </div>
 
+                    <div class="epx-field">
+
+                        <label asp-for="Product.Slug">
+                            Slug (URL)
+                        </label>
+
+                        <div class="epx-input-prefix">
+                            <span>/products/</span>
+                            <input asp-for="Product.Slug"
+                                   class="epx-input"
+                                   maxlength="200"
+                                   data-original="@Model.Product?.Slug" />
+                        </div>
+
+                        <span asp-validation-for="Product.Slug" class="epx-error"></span>
+
+                        <small class="epx-sale-hint" id="slugHint">
+                            Leave empty to keep the current slug.
+                        </small>
+
+                    </div>
 
                     <div class="epx-field">
 
@@ -1266,12 +1287,27 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
+                (function setupSlugWarning() {
+            var slugInput = document.getElementById('Product_Slug');
+            var hint = document.getElementById('slugHint');
+            if (!slugInput || !hint) return;
 
+            var original = slugInput.getAttribute('data-original') || '';
+            var defaultText = hint.textContent;
+
+            slugInput.addEventListener('input', function () {
+                var v = slugInput.value.trim();
+                if (original && v && v !== original) {
+                    hint.textContent = 'Changing the slug changes this product\'s URL. Old links and bookmarks will stop working.';
+                    hint.style.color = 'var(--epx-danger)';
+                } else {
+                    hint.textContent = defaultText;
+                    hint.style.color = '';
+                }
+            });
+        })();
         (function () {
 
-            /* =====================================================
-               PRIMARY IMAGE REPLACEMENT
-            ===================================================== */
 
             var primaryDrop =
                 document.getElementById('primaryDrop');

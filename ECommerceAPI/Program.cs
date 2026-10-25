@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using ECommerceAPI.Data;
+using ECommerceAPI.Helpers;
 using ECommerceAPI.Middleware;
 using ECommerceAPI.Options;
 using ECommerceAPI.Services;
@@ -387,6 +388,10 @@ builder.Services.Configure<
 builder.Services.AddAutoMapper(typeof(Program));
 
 var app = builder.Build();
+
+
+
+
 
 // ==========================
 // SEED DATABASE

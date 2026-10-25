@@ -439,6 +439,28 @@
 
                 <div class="epx-field">
 
+                    <label asp-for="Product.Slug">
+                        Slug (URL)
+                    </label>
+
+                    <div class="epx-input-prefix">
+                        <span>/products/</span>
+                        <input asp-for="Product.Slug"
+                               class="epx-input"
+                               maxlength="200"
+                               placeholder="auto-generated from the name" />
+                    </div>
+
+                    <span asp-validation-for="Product.Slug" class="epx-error"></span>
+
+                    <small class="epx-sale-hint">
+                        Leave empty to generate it from the product name. Must be unique.
+                    </small>
+
+                </div>
+
+                <div class="epx-field">
+
                     <label asp-for="Product.Name"></label>
 
                     <input asp-for="Product.Name"
@@ -817,7 +839,24 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
+                (function setupSlugPreview() {
+            var nameInput = document.getElementById('Product_Name');
+            var slugInput = document.getElementById('Product_Slug');
+            if (!nameInput || !slugInput) return;
 
+            var touched = slugInput.value.trim() !== '';
+            slugInput.addEventListener('input', function () { touched = true; });
+
+            nameInput.addEventListener('input', function () {
+                if (touched) return;
+                slugInput.value = nameInput.value
+                    .trim().toLowerCase()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^\p{L}\p{N}-]/gu, '')
+                    .replace(/-+/g, '-')
+                    .replace(/^-|-$/g, '');
+            });
+        })();
         (function () {
 
             // =========================================================

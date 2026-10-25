@@ -52,14 +52,12 @@ public class ProductsController : Controller
     [HttpPost]
     public async Task<IActionResult> Create(AdminCreateProductViewModel model)
     {
-        // 1. MVC validation
         if (!ModelState.IsValid)
         {
             model.Categories = await _categoryService.GetAllAsync();
             return View("Create", model);
         }
 
-        // 2. Create the product through the API
         AdminProductDto createdProduct;
 
         try
@@ -70,7 +68,6 @@ public class ProductsController : Controller
         }
         catch (ApiException ex)
         {
-            // API message, e.g. "A product with SKU 'X' already exists."
             AddProductError(ex.Message);
             model.Categories = await _categoryService.GetAllAsync();
             return View("Create", model);
@@ -85,10 +82,6 @@ public class ProductsController : Controller
             return View("Create", model);
         }
 
-        // 3. Upload gallery images.
-        // The product already exists at this point, so a failure here must NOT
-        // send the user back to the Create form (re-submitting would fail with
-        // "SKU already exists"). Send them to Edit instead.
         try
         {
             await UploadGalleryImagesAsync(createdProduct.Id, model);
@@ -101,7 +94,6 @@ public class ProductsController : Controller
             return RedirectToAction(nameof(Edit), new { id = createdProduct.Id });
         }
 
-        // 4. Success
         TempData["SuccessMessage"] = "Product created successfully.";
         return RedirectToAction(nameof(Index));
     }
@@ -129,14 +121,12 @@ public class ProductsController : Controller
         int id,
         AdminEditProductViewModel model)
     {
-        // 1. MVC validation
         if (!ModelState.IsValid)
         {
             await ReloadEditModelAsync(id, model);
             return View("Edit", model);
         }
 
-        // 2. Update through the API
         try
         {
             await _productService.UpdateAsync(
@@ -160,7 +150,6 @@ public class ProductsController : Controller
             return View("Edit", model);
         }
 
-        // 3. Success
         TempData["SuccessMessage"] = "Product updated successfully.";
         return RedirectToAction(nameof(Edit), new { id });
     }
@@ -230,13 +219,6 @@ public class ProductsController : Controller
         return RedirectToAction(nameof(Edit), new { id = productId });
     }
 
-    // ---------------------------------------------------------
-    // Helpers
-    // ---------------------------------------------------------
-
-    /// <summary>
-    /// Puts an API error message next to the field it belongs to.
-    /// </summary>
     private void AddProductError(string message)
     {
         if (message.Contains("SKU", StringComparison.OrdinalIgnoreCase))
@@ -251,23 +233,21 @@ public class ProductsController : Controller
         {
             ModelState.AddModelError("Product.SaleEndDate", message);
         }
+        else if (message.Contains("slug", StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError("Product.Slug", message);
+        }
         else
         {
             ModelState.AddModelError(string.Empty, message);
         }
     }
 
-    /// <summary>
-    /// Re-populates everything the Edit view needs when it is shown again
-    /// after a validation or API error.
-    /// </summary>
     private async Task ReloadEditModelAsync(int id, AdminEditProductViewModel model)
     {
         model.Categories = await _categoryService.GetAllAsync();
         model.Images = await _productService.GetImagesAsync(id);
 
-        // ImageUrl is not posted by the Edit form because the current cover
-        // is managed through the gallery. Restore it so it does not disappear.
         var existing = await _productService.GetByIdAsync(id);
 
         if (existing != null)

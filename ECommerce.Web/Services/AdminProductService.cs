@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using ECommerce.Web.Common;
 using ECommerce.Web.DTOs;
+using ECommerce.Web.Exceptions;
 using ECommerce.Web.Interfaces;
 using ECommerce.Web.Services.Base;
 using ECommerce.Web.ViewModels;
@@ -38,6 +39,7 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
         using var content = BuildMultipartContent(
             dto.SKU,
             dto.Name,
+            dto.Slug,
             dto.Description,
             dto.Price,
             dto.Stock,
@@ -50,6 +52,7 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
             imageFile);
 
         var response = await client.PostAsync("api/admin/products", content);
+
 
         response.EnsureSuccessStatusCode();
 
@@ -65,6 +68,7 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
         using var content = BuildMultipartContent(
             dto.SKU,
             dto.Name,
+            dto.Slug,
             dto.Description,
             dto.Price,
             dto.Stock,
@@ -77,11 +81,15 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
             imageFile);
 
         var response = await client.PutAsync($"api/admin/products/{id}", content);
+        await EnsureSuccessOrThrowApiAsync(response);
 
         response.EnsureSuccessStatusCode();
 
         return (await DeserializeAsync<AdminProductDto>(response))!;
     }
+
+
+
     public async Task DeleteAsync(int id)
     {
         var client = CreateClient();
@@ -111,13 +119,59 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
         return dto;
     }
 
+
+    private async Task EnsureSuccessOrThrowApiAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+            return;
+
+        var statusCode = (int)response.StatusCode;
+
+        if (statusCode is 400 or 404)
+        {
+            var body = await ReadErrorAsync(response);
+            var message = ExtractMessage(body) ?? "The request could not be completed.";
+
+            throw new ApiException(message, statusCode);
+        }
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    private static string? ExtractMessage(string body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+            return null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+
+            if (doc.RootElement.ValueKind != JsonValueKind.Object)
+                return null;
+
+            foreach (var property in doc.RootElement.EnumerateObject())
+            {
+                if (property.Value.ValueKind == JsonValueKind.String &&
+                    (property.NameEquals("message") ||
+                     property.Name.Equals("message", StringComparison.OrdinalIgnoreCase) ||
+                     property.Name.Equals("title", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return property.Value.GetString();
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // body was plain text
+        }
+
+        return null;
+    }
     private static DateTime? ToLocalForDisplay(DateTime? dt)
     {
         if (!dt.HasValue) return null;
 
-        // API returns Kind=Utc (from Postgres timestamptz). Convert to the
-        // machine's local time so the datetime-local input shows what the
-        // admin originally typed.
         return dt.Value.Kind == DateTimeKind.Utc
             ? dt.Value.ToLocalTime()
             : dt.Value;
@@ -143,6 +197,7 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
     private static MultipartFormDataContent BuildMultipartContent(
         string sku,
         string name,
+        string? slug,
         string description,
         decimal price,
         int stock,
@@ -154,6 +209,9 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
         DateTime? saleEndDate,
         IFormFile? imageFile)
     {
+
+
+
         var content = new MultipartFormDataContent
     {
         { new StringContent(sku ?? ""), "SKU" },
@@ -167,6 +225,10 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
         if (!string.IsNullOrWhiteSpace(imageUrl))
         {
             content.Add(new StringContent(imageUrl), "ImageUrl");
+        }
+        if (!string.IsNullOrWhiteSpace(slug))
+        {
+            content.Add(new StringContent(slug.Trim()), "Slug");
         }
 
         if (!string.IsNullOrWhiteSpace(imageAltText))
@@ -263,11 +325,9 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
     {
         var client = CreateClient();
 
-        // Package the altText into a JSON payload
         var jsonContent = JsonSerializer.Serialize(new { altText = altText ?? string.Empty });
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-        // Send the HTTP PUT request to your API endpoint
         var response = await client.PutAsync($"api/product-images/{imageId}/alt-text", content);
 
         response.EnsureSuccessStatusCode();

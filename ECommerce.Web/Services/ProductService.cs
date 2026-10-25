@@ -87,6 +87,38 @@ public class ProductService : ApiServiceBase, IProductService
         return result;
     }
 
+
+    public async Task<ProductViewModel?> GetProductBySlugAsync(string slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+            return null;
+
+        slug = slug.Trim();
+
+        var cacheKey = $"products:details:slug:{slug}";
+
+        if (_cache.TryGetValue(cacheKey, out ProductViewModel? cached))
+            return cached;
+
+        var client = CreateClient();
+
+        var escapedSlug = Uri.EscapeDataString(slug);
+
+        var response = await client.GetAsync(
+            $"api/products/slug/{escapedSlug}");
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        var result = await DeserializeAsync<ProductViewModel>(response);
+
+        if (result != null)
+            _cache.Set(cacheKey, result, DetailsCacheDuration);
+
+        return result;
+    }
+
+
     public async Task<List<ProductViewModel>> GetRelatedProductsAsync(int productId)
     {
         var cacheKey = $"products:related:{productId}";

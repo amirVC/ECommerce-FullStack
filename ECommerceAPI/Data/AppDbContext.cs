@@ -127,6 +127,16 @@ namespace ECommerceAPI.Data
                 .HasIndex(p => p.SKU)
                 .IsUnique();
 
+            // Product slug - unique URL per product
+            modelBuilder.Entity<Product>()
+                .HasIndex(p => p.Slug)
+                .IsUnique();
+
+            // Category slug - unique URL per category
+            modelBuilder.Entity<Category>()
+                .HasIndex(c => c.Slug)
+                .IsUnique();
+
 
             // ============================================================
             // Order → User

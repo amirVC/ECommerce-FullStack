@@ -1,6 +1,7 @@
 ﻿using ECommerceAPI.Data;
 using ECommerceAPI.DTOs;
 using ECommerceAPI.Extensions;
+using ECommerceAPI.Helpers;
 using ECommerceAPI.Models;
 using ECommerceAPI.Models.QueryParameters;
 using ECommerceAPI.Services.Interfaces;
@@ -52,6 +53,30 @@ public class ProductsController : ControllerBase
         return Ok(product);
     }
 
+
+
+    [HttpGet("slug/{slug}")]
+    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
+    public async Task<IActionResult> GetBySlug(string slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+            return NotFound("Product not found.");
+
+        var product = await _context.Products
+            .AsNoTracking()
+            .Where(p => p.Slug == slug)
+            .Include(p => p.Category)
+            .Include(p => p.Images)
+            .FirstOrDefaultAsync();
+
+        if (product == null)
+            return NotFound("Product not found.");
+
+        return Ok(product.ToResponseDto());
+    }
+
+
+
     [HttpGet("sku/{sku}")]
     [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetBySku(string sku)
@@ -91,13 +116,13 @@ public class ProductsController : ControllerBase
         var product = new Product
         {
             Name = dto.Name,
+            Slug = await GenerateUniqueSlugAsync(dto.Name),
             Description = dto.Description,
             Price = dto.Price,
             Stock = dto.Stock,
             ImageUrl = dto.ImageUrl,
             CategoryId = dto.CategoryId
         };
-
         _context.Products.Add(product);
 
         await _context.SaveChangesAsync();
@@ -106,6 +131,7 @@ public class ProductsController : ControllerBase
         {
             Id = product.Id,
             Name = product.Name,
+            Slug = product.Slug,
             Description = product.Description,
             Price = product.Price,
             Stock = product.Stock,
@@ -126,6 +152,7 @@ public class ProductsController : ControllerBase
             return NotFound("Product not found.");
 
         product.Name = dto.Name;
+        product.Slug = await GenerateUniqueSlugAsync(dto.Name, product.Id);
         product.Description = dto.Description;
         product.Price = dto.Price;
         product.Stock = dto.Stock;
@@ -138,6 +165,7 @@ public class ProductsController : ControllerBase
         {
             Id = product.Id,
             Name = product.Name,
+            Slug = product.Slug,
             Description = product.Description,
             Price = product.Price,
             Stock = product.Stock,
@@ -230,4 +258,24 @@ public class ProductsController : ControllerBase
         var related = await _productService.GetRelatedAsync(id);
         return Ok(related);
     }
+
+    private async Task<string> GenerateUniqueSlugAsync(
+    string name,
+    int? excludeProductId = null)
+    {
+        string baseSlug = SlugHelper.Generate(name);
+        string slug = baseSlug;
+        int suffix = 2;
+
+        while (await _context.Products.AnyAsync(p =>
+            p.Slug == slug &&
+            (!excludeProductId.HasValue || p.Id != excludeProductId.Value)))
+        {
+            slug = $"{baseSlug}-{suffix}";
+            suffix++;
+        }
+
+        return slug;
+    }
+
 }

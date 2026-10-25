@@ -9,7 +9,7 @@ public class ProductResponseDto
     public string SKU { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;
-
+    public string? Slug { get; set; }
     public string Description { get; set; } = string.Empty;
 
     // Original price

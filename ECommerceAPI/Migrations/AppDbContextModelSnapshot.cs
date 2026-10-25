@@ -282,9 +282,15 @@ namespace ECommerceAPI.Migrations
                     b.Property<Guid>("PublicId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Slug")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PublicId")
+                        .IsUnique();
+
+                    b.HasIndex("Slug")
                         .IsUnique();
 
                     b.ToTable("Categories");
@@ -731,6 +737,9 @@ namespace ECommerceAPI.Migrations
                     b.Property<DateTime?>("SaleStartDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Slug")
+                        .HasColumnType("text");
+
                     b.Property<int>("Stock")
                         .HasColumnType("integer");
 
@@ -750,6 +759,9 @@ namespace ECommerceAPI.Migrations
                         .IsUnique();
 
                     b.HasIndex("SKU")
+                        .IsUnique();
+
+                    b.HasIndex("Slug")
                         .IsUnique();
 
                     b.HasIndex("Stock");

@@ -15,6 +15,7 @@ public static class ProductMappingExtensions
             Id = product.Id,
             SKU = product.SKU,
             Name = product.Name,
+            Slug = product.Slug,
             Description = product.Description,
             Price = product.Price,
             Stock = product.Stock,

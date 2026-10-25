@@ -8,7 +8,7 @@
 
     <div class="row g-5">
 
-        <!-- ===================== IMAGE & GALLERY ===================== -->
+        <!-- IMAGE & GALLERY -->
         <div class="col-md-6">
 
             <!-- Main Image -->
@@ -81,7 +81,7 @@
         </div>
 
 
-        <!-- ===================== PRODUCT DETAILS ===================== -->
+        <!-- PRODUCT DETAILS -->
         <div class="col-md-6">
 
             <!-- Category -->
@@ -98,7 +98,7 @@
             </h1>
 
 
-            <!-- ===================== RATING ===================== -->
+            <!-- RATING -->
             @if (Model.ReviewSummary.TotalReviews > 0)
             {
                 <div class="mb-3">
@@ -127,7 +127,7 @@
             }
 
 
-            <!-- ===================== UNIFIED PRODUCT PRICE ===================== -->
+            <!-- UNIFIED PRODUCT PRICE -->
 
             <div class="mb-4">
 
@@ -230,7 +230,7 @@
             </div>
 
 
-            <!-- ===================== DESCRIPTION ===================== -->
+            <!-- DESCRIPTION -->
 
             <p class="text-muted"
                style="line-height: 1.7;">
@@ -240,7 +240,7 @@
             </p>
 
 
-            <!-- ===================== STOCK ===================== -->
+            <!-- STOCK -->
 
             <p class="mb-4">
 
@@ -277,7 +277,7 @@
             </p>
 
 
-            <!-- ===================== ACTIONS ===================== -->
+            <!-- ACTIONS -->
 
             <div class="d-flex gap-2">
 
@@ -331,7 +331,7 @@
     </div>
 
 
-    <!-- ===================== RELATED PRODUCTS ===================== -->
+    <!-- RELATED PRODUCTS -->
     @if (Model.RelatedProducts.Any())
     {
         <hr class="my-5" />
@@ -409,13 +409,25 @@
                             }
 
 
-                            <a asp-action="Details"
-                               asp-route-id="@item.Id"
-                               class="btn btn-outline-primary btn-sm mt-auto">
 
-                                View Product
-
-                            </a>
+                            @if (!string.IsNullOrWhiteSpace(item.Slug))
+                            {
+                                <a asp-controller="Products"
+                                   asp-action="DetailsBySlug"
+                                   asp-route-slug="@item.Slug"
+                                   class="btn btn-outline-primary btn-sm mt-auto">
+                                    View Product
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Products"
+                                   asp-action="Details"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-outline-primary btn-sm mt-auto">
+                                    View Product
+                                </a>
+                            }
 
                         </div>
 
@@ -428,7 +440,7 @@
     }
 
 
-    <!-- ===================== RECENTLY VIEWED ===================== -->
+    <!-- RECENTLY VIEWED -->
     @if (Model.RecentlyViewed.Any())
     {
         <hr class="my-5" />
@@ -536,13 +548,24 @@
                             }
 
                             <!-- View Product -->
-                            <a asp-action="Details"
-                               asp-route-id="@item.Id"
-                               class="btn btn-outline-primary btn-sm mt-auto">
-
-                                View Product
-
-                            </a>
+                            @if (!string.IsNullOrWhiteSpace(item.Slug))
+                            {
+                                <a asp-controller="Products"
+                                   asp-action="DetailsBySlug"
+                                   asp-route-slug="@item.Slug"
+                                   class="btn btn-outline-primary btn-sm mt-auto">
+                                    View Product
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Products"
+                                   asp-action="Details"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-outline-primary btn-sm mt-auto">
+                                    View Product
+                                </a>
+                            }
 
                         </div>
 
@@ -554,7 +577,7 @@
         </div>
     }
 
-    <!-- ===================== REVIEWS ===================== -->
+    <!-- REVIEWS -->
 
     <hr class="my-5" />
 
@@ -1030,7 +1053,7 @@
 </div>
 
 
-<!-- ===================== REVIEW IMAGE LIGHTBOX ===================== -->
+<!-- REVIEW IMAGE LIGHTBOX -->
 
 <div class="modal fade"
      id="reviewImageModal"
@@ -1058,7 +1081,7 @@
 </div>
 
 
-<!-- ===================== STYLES ===================== -->
+<!-- STYLES -->
 
 <style>
 
@@ -1102,7 +1125,7 @@
 
     <script>
 
-        // ===================== IMAGE SWITCH =====================
+        // IMAGE SWITCH  
 
         function switchMainImage(src, containerElement) {
 
@@ -1116,7 +1139,7 @@
         }
 
 
-        // ===================== WISHLIST =====================
+        // WISHLIST  
 
         async function toggleWishlist(btn) {
 
@@ -1207,7 +1230,7 @@
         }
 
 
-        // ===================== STAR PICKERS =====================
+        // STAR PICKERS  
 
         document.querySelectorAll('.star-picker').forEach(picker => {
 
@@ -1270,7 +1293,7 @@
         });
 
 
-        // ===================== REVIEW FORM VALIDATION =====================
+        // REVIEW FORM VALIDATION  
 
         document
             .querySelectorAll('form[data-review-form]')
@@ -1317,7 +1340,7 @@
             });
 
 
-        // ===================== IMAGE PREVIEW =====================
+        // IMAGE PREVIEW  
 
         function wireImagePreview(
             inputId,
@@ -1382,7 +1405,7 @@
         );
 
 
-        // ===================== REVIEW IMAGE LIGHTBOX =====================
+        // REVIEW IMAGE LIGHTBOX  
 
         function showReviewImage(src) {
 

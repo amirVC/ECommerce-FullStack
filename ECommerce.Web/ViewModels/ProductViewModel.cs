@@ -8,6 +8,8 @@ public class ProductViewModel
 
     public string Name { get; set; } = string.Empty;
 
+    public string? Slug { get; set; }
+
     public string? Description { get; set; }
 
     // Original product price
@@ -17,7 +19,7 @@ public class ProductViewModel
 
     public string? ImageUrl { get; set; }
 
-    public string? ThumbnailUrl { get; set; }   // NEW
+    public string? ThumbnailUrl { get; set; }   
 
     public string CategoryName { get; set; } = string.Empty;
 

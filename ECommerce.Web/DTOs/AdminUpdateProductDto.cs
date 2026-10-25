@@ -10,6 +10,9 @@ public class AdminUpdateProductDto : IValidatableObject
 
     public string Name { get; set; } = string.Empty;
 
+    [MaxLength(200)]
+    [Display(Name = "Slug (URL)")]
+    public string? Slug { get; set; }
     public string Description { get; set; } = string.Empty;
 
     public decimal Price { get; set; }

@@ -1,5 +1,4 @@
-﻿
-using ECommerce.Web.DTOs;
+﻿using ECommerce.Web.DTOs;
 using ECommerce.Web.Helpers;
 using ECommerce.Web.Interfaces;
 using ECommerce.Web.ViewModels;
@@ -63,8 +62,59 @@ public class ProductsController : Controller
         return View(model);
     }
 
+    private void SetProductSeoMetadata(ProductViewModel product)
+    {
+        ViewData["Title"] = product.Name;
+        ViewData["Robots"] = "index, follow";
+
+        // Use the product description for search engine snippets.
+        var description = product.Description ?? string.Empty;
+
+        description = System.Net.WebUtility.HtmlDecode(
+            System.Text.RegularExpressions.Regex.Replace(
+                description,
+                "<[^>]*>",
+                " "));
+
+        description = System.Text.RegularExpressions.Regex.Replace(
+            description,
+            @"\s+",
+            " ").Trim();
+
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            description = $"Discover {product.Name} in our online store.";
+        }
+
+        const int maxDescriptionLength = 160;
+
+        if (description.Length > maxDescriptionLength)
+        {
+            description = description[..157].TrimEnd() + "...";
+        }
+
+        ViewData["MetaDescription"] = description;
+
+        // Prefer the SEO-friendly product URL as the canonical URL.
+        var canonicalUrl = !string.IsNullOrWhiteSpace(product.Slug)
+            ? Url.Action(
+                nameof(DetailsBySlug),
+                "Products",
+                new { slug = product.Slug },
+                Request.Scheme)
+            : Url.Action(
+                nameof(Details),
+                "Products",
+                new { id = product.Id },
+                Request.Scheme);
+
+        ViewData["CanonicalUrl"] = canonicalUrl;
+    }
+
+
     // ============================================================
-    // PRODUCT DETAILS
+    // PRODUCT DETAILS - EXISTING NUMERIC URL
+    // Example: /Products/Details/5
     // ============================================================
 
     public async Task<IActionResult> Details(int id)
@@ -74,10 +124,35 @@ public class ProductsController : Controller
         if (product == null)
             return NotFound();
 
-        // --------------------------------------------------------
-        // Reviews (moved up — guests need `summary` to build their
-        // Recently Viewed entry, since there's no DB row for them)
-        // --------------------------------------------------------
+        return await BuildDetailsPageAsync(product);
+    }
+
+    // ============================================================
+    // PRODUCT DETAILS - SEO-FRIENDLY SLUG URL
+    // Example: /products/wireless-headphones
+    // ============================================================
+
+    [HttpGet("/products/{slug}")]
+    public async Task<IActionResult> DetailsBySlug(string slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+            return NotFound();
+
+        var product = await _productService.GetProductBySlugAsync(slug);
+
+        if (product == null)
+            return NotFound();
+
+        return await BuildDetailsPageAsync(product);
+    }
+
+
+    private async Task<IActionResult> BuildDetailsPageAsync(
+        ProductViewModel product)
+    {
+        var id = product.Id;
+
+        SetProductSeoMetadata(product);
 
         var reviewsPage = await _reviewService.GetProductReviewsAsync(
             id, page: 1, pageSize: 20);
@@ -88,11 +163,7 @@ public class ProductsController : Controller
             ? await _reviewService.GetMyReviewForProductAsync(id)
             : null;
 
-        // --------------------------------------------------------
-        // Recently Viewed — record this view
-        // Logged-in users: saved to DB via API
-        // Guests: saved to session cookie
-        // --------------------------------------------------------
+        // Recently Viewed
 
         if (IsLoggedIn)
         {
@@ -102,36 +173,35 @@ public class ProductsController : Controller
             }
             catch
             {
-                // Recently Viewed is optional — never break the page over this.
+                // Recently viewed should not prevent the product page
+                // from loading if its service is temporarily unavailable.
             }
         }
         else
         {
-            GuestRecentlyViewedHelper.Add(HttpContext.Session, new RecentlyViewedDto
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Price = product.Price,
-                ImageUrl = product.ImageUrl,
-                ThumbnailUrl = product.ThumbnailUrl,   // NEW
-                AverageRating = summary.AverageRating,
-                ReviewCount = summary.TotalReviews,
-                IsOnSale = product.IsOnSale,
-                SalePrice = product.SalePrice,
-                SaleStartDate = product.SaleStartDate,
-                SaleEndDate = product.SaleEndDate,
-                EffectivePrice = product.EffectivePrice,
-                CampaignDiscount = product.CampaignDiscount,
-                HasCampaign = product.HasCampaign,
-                CampaignName = product.CampaignName,
-                FinalPrice = product.FinalPrice,
-                TotalDiscountAmount = product.TotalDiscountAmount
-            });
+            GuestRecentlyViewedHelper.Add(
+                HttpContext.Session,
+                new RecentlyViewedDto
+                {
+                    Id = product.Id,
+                    Name = product.Name,
+                    Price = product.Price,
+                    ImageUrl = product.ImageUrl,
+                    ThumbnailUrl = product.ThumbnailUrl,
+                    AverageRating = summary.AverageRating,
+                    ReviewCount = summary.TotalReviews,
+                    IsOnSale = product.IsOnSale,
+                    SalePrice = product.SalePrice,
+                    SaleStartDate = product.SaleStartDate,
+                    SaleEndDate = product.SaleEndDate,
+                    EffectivePrice = product.EffectivePrice,
+                    CampaignDiscount = product.CampaignDiscount,
+                    HasCampaign = product.HasCampaign,
+                    CampaignName = product.CampaignName,
+                    FinalPrice = product.FinalPrice,
+                    TotalDiscountAmount = product.TotalDiscountAmount
+                });
         }
-
-        // --------------------------------------------------------
-        // Recently Viewed — for display, excluding current product
-        // --------------------------------------------------------
 
         List<RecentlyViewedDto> recentlyViewed;
 
@@ -148,7 +218,8 @@ public class ProductsController : Controller
         }
         else
         {
-            recentlyViewed = GuestRecentlyViewedHelper.Get(HttpContext.Session);
+            recentlyViewed = GuestRecentlyViewedHelper.Get(
+                HttpContext.Session);
         }
 
         recentlyViewed = recentlyViewed
@@ -212,10 +283,12 @@ public class ProductsController : Controller
 
         ViewBag.IsWishlisted =
             IsLoggedIn &&
-            (await _wishlistService.GetWishlistedProductIdsAsync()).Contains(id);
+            (await _wishlistService.GetWishlistedProductIdsAsync())
+                .Contains(id);
 
-        return View(model);
+        return View("Details", model);
     }
+
     // ============================================================
     // SUBMIT REVIEW
     // ============================================================
@@ -259,8 +332,7 @@ public class ProductsController : Controller
                 },
                 model.Image);
 
-            TempData["Success"] =
-                "Thanks for your review!";
+            TempData["Success"] = "Thanks for your review!";
         }
         catch (Exception ex)
         {
@@ -318,8 +390,7 @@ public class ProductsController : Controller
                 },
                 model.Image);
 
-            TempData["Success"] =
-                "Your review was updated.";
+            TempData["Success"] = "Your review was updated.";
         }
         catch (Exception ex)
         {
@@ -357,8 +428,7 @@ public class ProductsController : Controller
         {
             await _reviewService.DeleteReviewAsync(reviewId);
 
-            TempData["Success"] =
-                "Your review was deleted.";
+            TempData["Success"] = "Your review was deleted.";
         }
         catch (Exception ex)
         {
@@ -370,4 +440,3 @@ public class ProductsController : Controller
             new { id = productId });
     }
 }
-
