@@ -234,38 +234,6 @@ Use the URLs configured by your local launch profiles. For the development setup
 
 These addresses may differ if your local launch settings have changed.
 
-## Development Practices
-
-The project incorporates several practices used in maintainable .NET applications:
-
-- Separation of the web application and backend API.
-- Service and interface abstractions.
-- Data transfer objects for API communication.
-- View models for MVC views.
-- Entity Framework Core migrations.
-- Centralized exception handling.
-- Role-based access control.
-- Structured application logging.
-- Reusable API communication services.
-- Configuration-based integration with external services.
-
-## Screenshots
-
-Screenshots of the storefront, product details, shopping cart, checkout, and administration dashboard can be added here to demonstrate the application's user interface.
-
-Suggested structure:
-
-```text
-docs/
-└── screenshots/
-    ├── storefront.png
-    ├── product-details.png
-    ├── shopping-cart.png
-    ├── checkout.png
-    └── admin-dashboard.png
-```
-
-After adding the images to the repository, display them in this section using relative Markdown image paths.
 
 ## Future Improvements
 
