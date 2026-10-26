@@ -14,6 +14,7 @@ public class CartService : ICartService
     private readonly AppDbContext _context;
     private readonly ICouponService _couponService;
     private readonly ICampaignService _campaignService;
+
     public CartService(
         AppDbContext context,
         ICouponService couponService,
@@ -27,30 +28,30 @@ public class CartService : ICartService
     public async Task<CartDto> GetCartAsync(int userId)
     {
         var cart = await GetOrCreateCartAsync(userId);
-
         return await MapToDtoAsync(cart);
     }
 
     public async Task<CartDto> AddItemAsync(int userId, AddToCartDto dto)
     {
         var product = await _context.Products.FindAsync(dto.ProductId);
+
         if (product == null)
             throw new NotFoundException($"Product {dto.ProductId} not found.");
 
         var cart = await GetOrCreateCartAsync(userId);
 
-        var existingItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == dto.ProductId);
+        var existingItem = cart.CartItems
+            .FirstOrDefault(ci => ci.ProductId == dto.ProductId);
+
         var requestedQuantity = (existingItem?.Quantity ?? 0) + dto.Quantity;
 
         if (product.Stock == 0)
-        {
-            throw new BadRequestException($"{product.Name} is currently out of stock.");
-        }
+            throw new BadRequestException(
+                $"{product.Name} is currently out of stock.");
 
         if (product.Stock < requestedQuantity)
-        {
-            throw new BadRequestException($"Only {product.Stock} item(s) of {product.Name} are available.");
-        }
+            throw new BadRequestException(
+                $"Only {product.Stock} item(s) of {product.Name} are available.");
 
         if (existingItem != null)
         {
@@ -62,8 +63,9 @@ public class CartService : ICartService
             {
                 CartId = cart.Id,
                 ProductId = product.Id,
-                Product = product, 
-                Quantity = dto.Quantity
+                Product = product,
+                Quantity = dto.Quantity,
+                PublicId = Guid.NewGuid()
             });
         }
 
@@ -73,41 +75,79 @@ public class CartService : ICartService
         return await MapToDtoAsync(cart);
     }
 
-    public async Task<CartDto> UpdateItemAsync(int userId, int cartItemId, UpdateCartItemDto dto)
+    public async Task<CartDto> UpdateItemAsync(
+        int userId,
+        Guid publicId,
+        UpdateCartItemDto dto)
     {
-        var cartItem = await GetOwnedCartItemAsync(userId, cartItemId);
+        if (dto.Quantity <= 0)
+            throw new BadRequestException("Quantity must be greater than zero.");
+
+        var cartItem = await GetOwnedCartItemAsync(userId, publicId);
 
         if (cartItem.Product.Stock == 0)
-        {
-            throw new BadRequestException($"{cartItem.Product.Name} is currently out of stock.");
-        }
+            throw new BadRequestException(
+                $"{cartItem.Product.Name} is currently out of stock.");
 
         if (cartItem.Product.Stock < dto.Quantity)
-        {
-            throw new BadRequestException($"Only {cartItem.Product.Stock} item(s) of {cartItem.Product.Name} are available.");
-        }
+            throw new BadRequestException(
+                $"Only {cartItem.Product.Stock} item(s) of {cartItem.Product.Name} are available.");
 
         cartItem.Quantity = dto.Quantity;
 
         var cart = await GetOrCreateCartAsync(userId);
+
         await RevalidateCouponAsync(userId, cart);
         await _context.SaveChangesAsync();
 
         return await MapToDtoAsync(cart);
     }
 
-    public async Task<CartDto> RemoveItemAsync(int userId, int cartItemId)
+    public async Task<CartDto> RemoveItemAsync(int userId, Guid publicId)
     {
-        var cartItem = await GetOwnedCartItemAsync(userId, cartItemId);
+        var cartItem = await GetOwnedCartItemAsync(userId, publicId);
+        var cart = cartItem.Cart;
 
         _context.CartItems.Remove(cartItem);
+        cart.CartItems.Remove(cartItem);
 
-        var cart = await GetOrCreateCartAsync(userId);
-        cart.CartItems.Remove(cart.CartItems.First(ci => ci.Id == cartItemId));
         await RevalidateCouponAsync(userId, cart);
         await _context.SaveChangesAsync();
 
         return await MapToDtoAsync(cart);
+    }
+
+    public async Task IncreaseQuantityAsync(Guid publicId, int userId)
+    {
+        var cartItem = await GetOwnedCartItemAsync(userId, publicId);
+
+        if (cartItem.Product.Stock == 0)
+            throw new BadRequestException(
+                $"{cartItem.Product.Name} is currently out of stock.");
+
+        if (cartItem.Quantity >= cartItem.Product.Stock)
+            throw new BadRequestException(
+                $"Only {cartItem.Product.Stock} item(s) of {cartItem.Product.Name} are available.");
+
+        cartItem.Quantity++;
+
+        await RevalidateCouponAsync(userId, cartItem.Cart);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DecreaseQuantityAsync(Guid publicId, int userId)
+    {
+        var cartItem = await GetOwnedCartItemAsync(userId, publicId);
+
+        if (cartItem.Quantity <= 1)
+        {
+            return;
+        }
+
+        cartItem.Quantity--;
+
+        await RevalidateCouponAsync(userId, cartItem.Cart);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<CartDto> ClearCartAsync(int userId)
@@ -115,7 +155,8 @@ public class CartService : ICartService
         var cart = await GetOrCreateCartAsync(userId);
 
         _context.CartItems.RemoveRange(cart.CartItems);
-        cart.CartItems.Clear(); // keep in-memory navigation in sync with the removal above
+        cart.CartItems.Clear();
+
         cart.AppliedCouponCode = null;
         cart.DiscountAmount = 0m;
         cart.FreeShippingApplied = false;
@@ -131,11 +172,13 @@ public class CartService : ICartService
         var result = await _couponService.ValidateAsync(code, userId, cart);
 
         if (!result.IsValid)
-            throw new BadRequestException(result.ErrorMessage ?? "Invalid coupon.");
+            throw new BadRequestException(
+                result.ErrorMessage ?? "Invalid coupon.");
 
         cart.AppliedCouponCode = result.Code;
         cart.DiscountAmount = result.DiscountAmount;
         cart.FreeShippingApplied = result.FreeShipping;
+
         await _context.SaveChangesAsync();
 
         return await MapToDtoAsync(cart);
@@ -144,14 +187,15 @@ public class CartService : ICartService
     public async Task<CartDto> RemoveCouponAsync(int userId)
     {
         var cart = await GetOrCreateCartAsync(userId);
+
         cart.AppliedCouponCode = null;
         cart.DiscountAmount = 0m;
         cart.FreeShippingApplied = false;
+
         await _context.SaveChangesAsync();
 
         return await MapToDtoAsync(cart);
     }
-
 
     private async Task<Cart> GetOrCreateCartAsync(int userId)
     {
@@ -160,21 +204,29 @@ public class CartService : ICartService
             .ThenInclude(ci => ci.Product)
             .FirstOrDefaultAsync(c => c.UserId == userId);
 
-        if (cart != null) return cart;
+        if (cart != null)
+            return cart;
 
         cart = new Cart { UserId = userId };
+
         _context.Carts.Add(cart);
         await _context.SaveChangesAsync();
 
         return cart;
     }
 
-    private async Task<CartItem> GetOwnedCartItemAsync(int userId, int cartItemId)
+    private async Task<CartItem> GetOwnedCartItemAsync(
+        int userId,
+        Guid publicId)
     {
         var cartItem = await _context.CartItems
             .Include(ci => ci.Product)
             .Include(ci => ci.Cart)
-            .FirstOrDefaultAsync(ci => ci.Id == cartItemId && ci.Cart.UserId == userId);
+                .ThenInclude(c => c.CartItems)
+                    .ThenInclude(ci => ci.Product)
+            .FirstOrDefaultAsync(ci =>
+                ci.PublicId == publicId &&
+                ci.Cart.UserId == userId);
 
         if (cartItem == null)
             throw new NotFoundException("Cart item not found.");
@@ -187,7 +239,8 @@ public class CartService : ICartService
         if (string.IsNullOrEmpty(cart.AppliedCouponCode))
             return;
 
-        var result = await _couponService.ValidateAsync(cart.AppliedCouponCode, userId, cart);
+        var result = await _couponService.ValidateAsync(
+            cart.AppliedCouponCode, userId, cart);
 
         if (result.IsValid)
         {
@@ -225,7 +278,6 @@ public class CartService : ICartService
             };
         }
 
-
         var campaignKeys = cart.CartItems
             .Select(ci => (
                 ProductId: ci.Product.Id,
@@ -245,28 +297,36 @@ public class CartService : ICartService
             var salePrice = cartItem.Product.EffectivePrice();
             var saleDiscountPerUnit = originalUnitPrice - salePrice;
 
-            activeCampaigns.TryGetValue(cartItem.ProductId, out var campaign);
-            var campaignDiscountPerUnit = CampaignService.ComputeDiscount(campaign, salePrice);
+            activeCampaigns.TryGetValue(
+                cartItem.ProductId, out var campaign);
 
-            var finalUnitPrice = Math.Max(0m, salePrice - campaignDiscountPerUnit);
+            var campaignDiscountPerUnit =
+                CampaignService.ComputeDiscount(campaign, salePrice);
+
+            var finalUnitPrice = Math.Max(
+                0m, salePrice - campaignDiscountPerUnit);
 
             var itemSubtotal = finalUnitPrice * cartItem.Quantity;
 
             originalSubtotal += originalUnitPrice * cartItem.Quantity;
             saleDiscountTotal += saleDiscountPerUnit * cartItem.Quantity;
-            campaignDiscountTotal += campaignDiscountPerUnit * cartItem.Quantity;
+            campaignDiscountTotal +=
+                campaignDiscountPerUnit * cartItem.Quantity;
 
             items.Add(new CartItemDto
             {
                 Id = cartItem.Id,
+                PublicId = cartItem.PublicId,
                 ProductId = cartItem.ProductId,
                 ProductName = cartItem.Product.Name,
                 ProductImageUrl = cartItem.Product.ImageUrl,
                 ProductThumbnailUrl = cartItem.Product.ThumbnailUrl,
 
                 OriginalUnitPrice = originalUnitPrice,
-                SaleDiscountAmount = saleDiscountPerUnit * cartItem.Quantity,
-                CampaignDiscountAmount = campaignDiscountPerUnit * cartItem.Quantity,
+                SaleDiscountAmount =
+                    saleDiscountPerUnit * cartItem.Quantity,
+                CampaignDiscountAmount =
+                    campaignDiscountPerUnit * cartItem.Quantity,
                 UnitPrice = finalUnitPrice,
                 IsOnSale = cartItem.Product.IsOnSale(),
 
@@ -277,7 +337,6 @@ public class CartService : ICartService
         }
 
         var preCouponSubtotal = items.Sum(i => i.Subtotal);
-
         var total = Math.Max(0m, preCouponSubtotal - cart.DiscountAmount);
 
         return new CartDto
@@ -295,7 +354,6 @@ public class CartService : ICartService
             FreeShippingApplied = cart.FreeShippingApplied,
 
             DiscountAmount = cart.DiscountAmount,
-
             Subtotal = originalSubtotal,
             TotalAmount = total
         };

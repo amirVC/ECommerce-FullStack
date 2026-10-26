@@ -22,10 +22,6 @@ namespace ECommerceAPI.Controllers
         private int UserId =>
             int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        // ==========================================
-        // GET CART
-        // Global limit: 100/minute
-        // ==========================================
         [HttpGet]
         public async Task<IActionResult> GetCart()
         {
@@ -33,10 +29,6 @@ namespace ECommerceAPI.Controllers
             return Ok(cart);
         }
 
-        // ==========================================
-        // ADD ITEM
-        // Cart limit: 30/minute
-        // ==========================================
         [HttpPost("items")]
         [EnableRateLimiting("cart")]
         public async Task<IActionResult> AddItem(
@@ -46,43 +38,49 @@ namespace ECommerceAPI.Controllers
             return Ok(cart);
         }
 
-        // ==========================================
-        // UPDATE ITEM
-        // Cart limit: 30/minute
-        // ==========================================
-        [HttpPut("items/{id}")]
+        [HttpPut("items/{publicId:guid}")]
         [EnableRateLimiting("cart")]
         public async Task<IActionResult> UpdateItem(
-            int id,
+            Guid publicId,
             [FromBody] UpdateCartItemDto dto)
         {
             var cart = await _cartService.UpdateItemAsync(
                 UserId,
-                id,
+                publicId,
                 dto);
 
             return Ok(cart);
         }
 
-        // ==========================================
-        // REMOVE ITEM
-        // Cart limit: 30/minute
-        // ==========================================
-        [HttpDelete("items/{id}")]
+        [HttpDelete("items/{publicId:guid}")]
         [EnableRateLimiting("cart")]
-        public async Task<IActionResult> RemoveItem(int id)
+        public async Task<IActionResult> RemoveItem(Guid publicId)
         {
             var cart = await _cartService.RemoveItemAsync(
                 UserId,
-                id);
+                publicId);
 
             return Ok(cart);
         }
 
-        // ==========================================
-        // CLEAR CART
-        // Cart limit: 30/minute
-        // ==========================================
+        [HttpPost("items/{publicId:guid}/increase")]
+        [EnableRateLimiting("cart")]
+        public async Task<IActionResult> IncreaseQuantity(Guid publicId)
+        {
+            await _cartService.IncreaseQuantityAsync(publicId, UserId);
+
+            return Ok(await _cartService.GetCartAsync(UserId));
+        }
+
+        [HttpPost("items/{publicId:guid}/decrease")]
+        [EnableRateLimiting("cart")]
+        public async Task<IActionResult> DecreaseQuantity(Guid publicId)
+        {
+            await _cartService.DecreaseQuantityAsync(publicId, UserId);
+
+            return Ok(await _cartService.GetCartAsync(UserId));
+        }
+
         [HttpDelete]
         [EnableRateLimiting("cart")]
         public async Task<IActionResult> ClearCart()
@@ -91,10 +89,6 @@ namespace ECommerceAPI.Controllers
             return Ok(cart);
         }
 
-        // ==========================================
-        // APPLY COUPON
-        // Cart limit: 30/minute
-        // ==========================================
         [HttpPost("coupon")]
         [EnableRateLimiting("cart")]
         public async Task<IActionResult> ApplyCoupon(
@@ -107,11 +101,8 @@ namespace ECommerceAPI.Controllers
             return Ok(cart);
         }
 
-        // ==========================================
-        // REMOVE COUPON
-        // Global limit: 100/minute
-        // ==========================================
         [HttpDelete("coupon")]
+        [EnableRateLimiting("cart")]
         public async Task<IActionResult> RemoveCoupon()
         {
             var cart = await _cartService.RemoveCouponAsync(UserId);

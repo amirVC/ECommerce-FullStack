@@ -32,7 +32,8 @@ public class MappingProfile : Profile
         CreateMap<Address, AddressDto>();
         CreateMap<CreateAddressDto, Address>();
         CreateMap<UpdateAddressDto, Address>();
-
+        CreateMap<Review, ReviewDto>()
+    .ForMember(d => d.ProductSlug, o => o.MapFrom(s => s.Product.Slug));
         CreateMap<DeliveryMethod, DeliveryMethodDto>();
         CreateMap<CreateDeliveryMethodDto, DeliveryMethod>();
         CreateMap<UpdateDeliveryMethodDto, DeliveryMethod>();

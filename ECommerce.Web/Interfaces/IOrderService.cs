@@ -5,4 +5,5 @@ public interface IOrderService
     Task<OrderResponseDto?> CheckoutAsync(CheckoutDto dto);
     Task<List<OrderResponseDto>> GetMyOrdersAsync();
     Task<OrderResponseDto?> GetOrderByIdAsync(int id);
+    Task<OrderResponseDto?> GetOrderByPublicIdAsync(Guid publicId);
 }

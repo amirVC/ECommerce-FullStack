@@ -11,4 +11,5 @@ public interface IWishlistService
     Task ClearWishlistAsync();
     Task<int> GetWishlistCountAsync();
     Task<HashSet<int>> GetWishlistedProductIdsAsync();
+    Task RemoveBySlugAsync(string slug);
 }

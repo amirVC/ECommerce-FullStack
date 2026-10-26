@@ -27,7 +27,6 @@ public class ApiClient : IApiClient
     {
         var client = _httpClientFactory.CreateClient("ApiClient");
 
-        // If no token was explicitly supplied, get it directly from Session.
         token ??= _httpContextAccessor.HttpContext?
             .Session.GetString("JWToken");
 
@@ -53,14 +52,12 @@ public class ApiClient : IApiClient
                 using var document = JsonDocument.Parse(json);
 
                 if (document.RootElement.TryGetProperty(
-                    "Message",
-                    out var messageProperty))
+                    "Message", out var messageProperty))
                 {
                     message = messageProperty.GetString() ?? message;
                 }
                 else if (document.RootElement.TryGetProperty(
-                    "message",
-                    out messageProperty))
+                    "message", out messageProperty))
                 {
                     message = messageProperty.GetString() ?? message;
                 }
@@ -75,9 +72,7 @@ public class ApiClient : IApiClient
             }
         }
 
-        throw new ApiException(
-            message,
-            (int)response.StatusCode);
+        throw new ApiException(message, (int)response.StatusCode);
     }
 
     public async Task<T?> GetAsync<T>(
@@ -96,9 +91,7 @@ public class ApiClient : IApiClient
         if (string.IsNullOrWhiteSpace(json))
             return default;
 
-        return JsonSerializer.Deserialize<T>(
-            json,
-            _jsonOptions);
+        return JsonSerializer.Deserialize<T>(json, _jsonOptions);
     }
 
     public async Task<TResponse?> PostAsync<TRequest, TResponse>(
@@ -110,7 +103,7 @@ public class ApiClient : IApiClient
 
         var json = JsonSerializer.Serialize(body);
 
-        var content = new StringContent(
+        using var content = new StringContent(
             json,
             Encoding.UTF8,
             "application/json");
@@ -120,15 +113,13 @@ public class ApiClient : IApiClient
         if (!response.IsSuccessStatusCode)
             await ThrowApiException(response);
 
-        var responseJson =
-            await response.Content.ReadAsStringAsync();
+        var responseJson = await response.Content.ReadAsStringAsync();
 
         if (string.IsNullOrWhiteSpace(responseJson))
             return default;
 
         return JsonSerializer.Deserialize<TResponse>(
-            responseJson,
-            _jsonOptions);
+            responseJson, _jsonOptions);
     }
 
     public async Task<bool> PostAsync<TRequest>(
@@ -140,7 +131,7 @@ public class ApiClient : IApiClient
 
         var json = JsonSerializer.Serialize(body);
 
-        var content = new StringContent(
+        using var content = new StringContent(
             json,
             Encoding.UTF8,
             "application/json");
@@ -153,6 +144,28 @@ public class ApiClient : IApiClient
         return true;
     }
 
+    public async Task<TResponse?> PostAsync<TResponse>(
+        string url,
+        string? token = null)
+    {
+        var client = CreateClient(token);
+
+        var response = await client.PostAsync(
+            url,
+            (HttpContent?)null);
+
+        if (!response.IsSuccessStatusCode)
+            await ThrowApiException(response);
+
+        var responseJson = await response.Content.ReadAsStringAsync();
+
+        if (string.IsNullOrWhiteSpace(responseJson))
+            return default;
+
+        return JsonSerializer.Deserialize<TResponse>(
+            responseJson, _jsonOptions);
+    }
+
     public async Task<TResponse?> PutAsync<TRequest, TResponse>(
         string url,
         TRequest body,
@@ -162,7 +175,7 @@ public class ApiClient : IApiClient
 
         var json = JsonSerializer.Serialize(body);
 
-        var content = new StringContent(
+        using var content = new StringContent(
             json,
             Encoding.UTF8,
             "application/json");
@@ -172,15 +185,13 @@ public class ApiClient : IApiClient
         if (!response.IsSuccessStatusCode)
             await ThrowApiException(response);
 
-        var responseJson =
-            await response.Content.ReadAsStringAsync();
+        var responseJson = await response.Content.ReadAsStringAsync();
 
         if (string.IsNullOrWhiteSpace(responseJson))
             return default;
 
         return JsonSerializer.Deserialize<TResponse>(
-            responseJson,
-            _jsonOptions);
+            responseJson, _jsonOptions);
     }
 
     public async Task<TResponse?> DeleteAsync<TResponse>(
@@ -194,15 +205,13 @@ public class ApiClient : IApiClient
         if (!response.IsSuccessStatusCode)
             await ThrowApiException(response);
 
-        var responseJson =
-            await response.Content.ReadAsStringAsync();
+        var responseJson = await response.Content.ReadAsStringAsync();
 
         if (string.IsNullOrWhiteSpace(responseJson))
             return default;
 
         return JsonSerializer.Deserialize<TResponse>(
-            responseJson,
-            _jsonOptions);
+            responseJson, _jsonOptions);
     }
 
     public async Task<TResponse?> PostMultipartAsync<TResponse>(
@@ -217,15 +226,13 @@ public class ApiClient : IApiClient
         if (!response.IsSuccessStatusCode)
             await ThrowApiException(response);
 
-        var responseJson =
-            await response.Content.ReadAsStringAsync();
+        var responseJson = await response.Content.ReadAsStringAsync();
 
         if (string.IsNullOrWhiteSpace(responseJson))
             return default;
 
         return JsonSerializer.Deserialize<TResponse>(
-            responseJson,
-            _jsonOptions);
+            responseJson, _jsonOptions);
     }
 
     public async Task<TResponse?> PutMultipartAsync<TResponse>(
@@ -240,14 +247,12 @@ public class ApiClient : IApiClient
         if (!response.IsSuccessStatusCode)
             await ThrowApiException(response);
 
-        var responseJson =
-            await response.Content.ReadAsStringAsync();
+        var responseJson = await response.Content.ReadAsStringAsync();
 
         if (string.IsNullOrWhiteSpace(responseJson))
             return default;
 
         return JsonSerializer.Deserialize<TResponse>(
-            responseJson,
-            _jsonOptions);
+            responseJson, _jsonOptions);
     }
 }

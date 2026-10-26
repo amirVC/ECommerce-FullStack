@@ -25,43 +25,64 @@ public class OrdersController : Controller
         var orders = await _orderService.GetMyOrdersAsync();
         return View(orders);
     }
+   
+    [HttpGet("Orders/{publicId:guid}")]
+    public async Task<IActionResult> DetailsByPublicId(Guid publicId)
+    {
+        if (!_authService.IsLoggedIn())
+            return RedirectToAction("Login", "Account");
+
+        var order = await _orderService.GetOrderByPublicIdAsync(publicId);
+        if (order == null)
+            return NotFound();
+
+      
+        var myRequests = await _refundRequestService.GetMineAsync();
+        ViewBag.RefundRequest = myRequests
+            .Where(r => r.OrderId == order.Id)
+            .OrderByDescending(r => r.RequestedAt)
+            .FirstOrDefault();
+
+        ViewBag.Shipment = await _shipmentService.GetByOrderIdAsync(order.Id);
+
+        return View("Details", order);
+    }
+
+   
     public async Task<IActionResult> Details(int id)
     {
         if (!_authService.IsLoggedIn())
             return RedirectToAction("Login", "Account");
-        var order = await _orderService.GetOrderByIdAsync(id);
+
+        var order = await _orderService.GetOrderByIdAsync(id);  
         if (order == null)
             return NotFound();
 
-        var myRequests = await _refundRequestService.GetMineAsync();
-        ViewBag.RefundRequest = myRequests
-            .Where(r => r.OrderId == id)
-            .OrderByDescending(r => r.RequestedAt)
-            .FirstOrDefault();
-
-        ViewBag.Shipment = await _shipmentService.GetByOrderIdAsync(id);
-
-        return View(order);
+        return RedirectToActionPermanent(nameof(DetailsByPublicId), new { publicId = order.PublicId });
     }
 
     [HttpPost]
-    public async Task<IActionResult> RequestRefund(int orderId, string reason)
+    public async Task<IActionResult> RequestRefund(Guid publicId, string reason)
     {
         if (!_authService.IsLoggedIn())
             return RedirectToAction("Login", "Account");
 
+        var order = await _orderService.GetOrderByPublicIdAsync(publicId);
+        if (order == null)
+            return NotFound();
+
         if (string.IsNullOrWhiteSpace(reason))
         {
             TempData["RefundRequestError"] = "Please tell us why you'd like a refund.";
-            return RedirectToAction(nameof(Details), new { id = orderId });
+            return RedirectToAction(nameof(DetailsByPublicId), new { publicId });
         }
 
-        var result = await _refundRequestService.CreateAsync(orderId, reason);
+        var result = await _refundRequestService.CreateAsync(order.Id, reason);
         TempData[result != null ? "RefundRequestSuccess" : "RefundRequestError"] =
             result != null
                 ? "Your refund request has been submitted and is awaiting review."
                 : "Could not submit your refund request. It may already have a pending request, or the order isn't eligible.";
 
-        return RedirectToAction(nameof(Details), new { id = orderId });
+        return RedirectToAction(nameof(DetailsByPublicId), new { publicId });
     }
 }

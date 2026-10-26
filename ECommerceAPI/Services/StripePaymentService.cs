@@ -237,7 +237,7 @@ namespace ECommerceAPI.Services
                 .AsNoTracking()
                 .Where(p => p.Order != null && p.Order.UserId == userId)
                 .OrderByDescending(p => p.CreatedAt)
-                .Select(p => ToDto(p))
+                .Select(ToDto)
                 .ToListAsync();
         }
 
@@ -247,20 +247,22 @@ namespace ECommerceAPI.Services
                 .AsNoTracking()
                 .Where(p => p.OrderId == orderId)
                 .OrderByDescending(p => p.CreatedAt)
-                .Select(p => ToDto(p))
+                .Select(ToDto)
                 .ToListAsync();
         }
 
-        private static PaymentDto ToDto(Payment p) => new PaymentDto
-        {
-            Id = p.Id,
-            OrderId = p.OrderId,
-            Provider = p.Provider,
-            Amount = p.Amount,
-            Currency = p.Currency,
-            Status = p.Status,
-            RefundedAmount = p.RefundedAmount,
-            CreatedAt = p.CreatedAt
-        };
+        private static readonly System.Linq.Expressions.Expression<Func<Payment, PaymentDto>> ToDto =
+            p => new PaymentDto
+            {
+                Id = p.Id,
+                OrderId = p.OrderId,
+                OrderPublicId = p.Order.PublicId,
+                Provider = p.Provider,
+                Amount = p.Amount,
+                Currency = p.Currency,
+                Status = p.Status,
+                RefundedAmount = p.RefundedAmount,
+                CreatedAt = p.CreatedAt
+            };
     }
 }

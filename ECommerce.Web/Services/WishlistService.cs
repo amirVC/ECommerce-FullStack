@@ -68,8 +68,11 @@ public class WishlistService : IWishlistService
             .ToHashSet();
     }
 
-    // ---------- Helpers ----------
-
+    public async Task RemoveBySlugAsync(string slug)
+    {
+        await _apiClient.DeleteAsync<WishlistDto>(
+            $"{WishlistApiBase}/slug/{Uri.EscapeDataString(slug)}");
+    }
     private static List<WishlistItemViewModel> MapFromApi(
         WishlistDto? wishlist)
     {
@@ -82,6 +85,7 @@ public class WishlistService : IWishlistService
                 Id = i.Id,
                 ProductId = i.ProductId,
                 ProductName = i.ProductName,
+                ProductSlug = i.ProductSlug,
                 ImageUrl = i.ProductImageUrl,
                 ThumbnailUrl = i.ProductThumbnailUrl,  
                 Price = i.Price,

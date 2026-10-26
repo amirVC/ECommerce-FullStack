@@ -3,7 +3,7 @@
     public class CartItem
     {
         public int Id { get; set; }
-
+        public Guid PublicId { get; set; } = Guid.NewGuid();
         public int CartId { get; set; }
         public Cart Cart { get; set; } = null!;
 

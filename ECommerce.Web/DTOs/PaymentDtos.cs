@@ -13,12 +13,6 @@
         public string Currency { get; set; } = string.Empty;
     }
 
-    // DirectRefundDto / RefundResponseDto already live in RefundDtos.cs (RefundResponseDto.Status
-    // is a plain string there, not PaymentStatus) — not redefined here.
-
-    // These two enums must mirror ECommerceAPI.Models.PaymentProvider / PaymentStatus
-    // EXACTLY (same names, same order) since the API serializes them as plain ints
-    // over JSON and ECommerce.Web doesn't reference ECommerceAPI's assembly.
     public enum PaymentProvider
     {
         Stripe = 0,
@@ -35,11 +29,11 @@
         Canceled = 5
     }
 
-    // Payment history row for the customer's own "My Payments" page.
     public class PaymentDto
     {
         public int Id { get; set; }
         public int OrderId { get; set; }
+        public Guid OrderPublicId { get; set; }
         public PaymentProvider Provider { get; set; }
         public decimal Amount { get; set; }
         public string Currency { get; set; } = string.Empty;
@@ -48,7 +42,6 @@
         public DateTime CreatedAt { get; set; }
     }
 
-    // Payment row for the admin Payments page - same as PaymentDto plus who it belongs to.
     public class AdminPaymentDto
     {
         public int Id { get; set; }
@@ -76,8 +69,6 @@
         public int TotalPages => PageSize == 0 ? 0 : (int)Math.Ceiling(TotalCount / (double)PageSize);
     }
 
-    // Filters used by PaymentService.GetAllForAdminAsync() to build the query string
-    // sent to GET api/admin/payments.
     public class AdminPaymentQuery
     {
         public int Page { get; set; } = 1;

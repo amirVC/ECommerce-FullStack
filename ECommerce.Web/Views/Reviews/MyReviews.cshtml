@@ -35,8 +35,25 @@
                 <div class="text-muted small">@r.CreatedAt.ToString("MMM dd, yyyy")</div>
             </div>
             <div class="d-flex gap-2">
-                <a asp-controller="Products" asp-action="Details" asp-route-id="@r.ProductId" class="btn btn-sm btn-outline-secondary">View Product</a>
-                <form asp-action="Delete" method="post" onsubmit="return confirm('Delete this review?');">
+                @if (!string.IsNullOrWhiteSpace(r.ProductSlug))
+                {
+                    <a asp-controller="Products"
+                       asp-action="DetailsBySlug"
+                       asp-route-slug="@r.ProductSlug"
+                       class="btn btn-outline-primary btn-sm">
+                        View Product
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Products"
+                       asp-action="Details"
+                       asp-route-id="@r.ProductId"
+                       class="btn btn-outline-primary btn-sm">
+                        View Product
+                    </a>
+                }
+                    <form asp-action="Delete" method="post" onsubmit="return confirm('Delete this review?');">
                     <input type="hidden" name="id" value="@r.Id" />
                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                 </form>

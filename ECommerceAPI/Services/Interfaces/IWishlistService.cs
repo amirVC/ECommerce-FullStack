@@ -9,4 +9,5 @@ public interface IWishlistService
     Task<WishlistDto> RemoveItemAsync(int userId, int wishlistItemId);
     Task<WishlistDto> RemoveByProductAsync(int userId, int productId);
     Task<WishlistDto> ClearWishlistAsync(int userId);
+    Task<WishlistDto> RemoveBySlugAsync(int userId, string slug);
 }

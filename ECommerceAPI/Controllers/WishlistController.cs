@@ -48,6 +48,13 @@ namespace ECommerceAPI.Controllers
             return Ok(wishlist);
         }
 
+        [HttpDelete("slug/{slug}")]
+        public async Task<IActionResult> RemoveBySlug(string slug)
+        {
+            var wishlist = await _wishlistService.RemoveBySlugAsync(UserId, slug);
+            return Ok(wishlist);
+        }
+
         [HttpDelete]
         public async Task<IActionResult> ClearWishlist()
         {

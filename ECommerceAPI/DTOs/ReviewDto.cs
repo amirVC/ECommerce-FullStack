@@ -3,6 +3,7 @@
 public class ReviewDto
 {
     public int Id { get; set; }
+    public string? ProductSlug { get; set; }
     public int ProductId { get; set; }
     public int UserId { get; set; }
     public string UserName { get; set; } = string.Empty;

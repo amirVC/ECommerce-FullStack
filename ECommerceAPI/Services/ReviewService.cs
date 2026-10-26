@@ -34,6 +34,7 @@ public class ReviewService : IReviewService
             {
                 Id = r.Id,
                 ProductId = r.ProductId,
+                ProductSlug = r.Product.Slug,
                 UserId = r.UserId,
                 UserName = r.User != null ? r.User.FullName : "Anonymous",
                 Rating = r.Rating,
@@ -238,6 +239,7 @@ public class ReviewService : IReviewService
             {
                 Id = r.Id,
                 ProductId = r.ProductId,
+                ProductSlug = r.Product.Slug,
                 UserId = r.UserId,
                 UserName = r.User != null ? r.User.FullName : "Anonymous",
                 Rating = r.Rating,
@@ -261,6 +263,7 @@ public class ReviewService : IReviewService
             {
                 Id = r.Id,
                 ProductId = r.ProductId,
+                ProductSlug = r.Product.Slug,
                 UserId = r.UserId,
                 UserName = r.User.FullName,
                 Rating = r.Rating,

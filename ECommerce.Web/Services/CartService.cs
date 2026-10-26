@@ -1,4 +1,5 @@
-﻿using ECommerce.Web.DTOs;
+﻿
+using ECommerce.Web.DTOs;
 using ECommerce.Web.Exceptions;
 using ECommerce.Web.Helpers;
 using ECommerce.Web.Interfaces;
@@ -46,6 +47,8 @@ public class CartService : ICartService
         ProductViewModel product,
         int quantity = 1)
     {
+        if (quantity <= 0)
+            throw new ApiException("Quantity must be greater than zero.", 400);
         if (IsLoggedIn)
         {
             await _apiClient.PostAsync<AddToCartDto, CartDto>(
@@ -61,23 +64,22 @@ public class CartService : ICartService
 
         var cart = GetSessionCart();
 
-        var item = cart.FirstOrDefault(
-            x => x.ProductId == product.Id);
+        var item = cart.FirstOrDefault(x => x.ProductId == product.Id);
 
         if (item == null)
         {
             cart.Add(new CartItemViewModel
             {
                 Id = product.Id,
+                PublicId = Guid.NewGuid(),
                 ProductId = product.Id,
                 ProductName = product.Name,
                 Price = product.EffectivePrice,
                 OriginalPrice = product.Price,
                 IsOnSale = product.IsOnSale,
                 Quantity = quantity,
-                ImageUrl = product.ImageUrl,    
-                ThumbnailUrl = product.ThumbnailUrl   // NEW
-
+                ImageUrl = product.ImageUrl,
+                ThumbnailUrl = product.ThumbnailUrl
             });
         }
         else
@@ -88,51 +90,32 @@ public class CartService : ICartService
         SaveSessionCart(cart);
     }
 
-    public async Task IncreaseQuantityAsync(int id)
+    public async Task IncreaseQuantityAsync(Guid publicId)
     {
         if (IsLoggedIn)
         {
-            var cart =
-                await _apiClient.GetAsync<CartDto>(CartApiBase);
-
-            var item =
-                cart?.Items.FirstOrDefault(i => i.Id == id);
-
-            if (item == null)
-                return;
-
-            await _apiClient.PutAsync<UpdateCartItemDto, CartDto>(
-                $"{CartApiBase}/items/{id}",
-                new UpdateCartItemDto
-                {
-                    Quantity = item.Quantity + 1
-                });
+            await _apiClient.PostAsync<CartDto>(
+                $"{CartApiBase}/items/{publicId}/increase");
 
             return;
         }
 
         var sessionCart = GetSessionCart();
+        var item = sessionCart.FirstOrDefault(x => x.PublicId == publicId);
 
-        var sessionItem =
-            sessionCart.FirstOrDefault(x => x.ProductId == id);
-
-        if (sessionItem == null)
+        if (item == null)
             return;
 
-        sessionItem.Quantity++;
-
+        item.Quantity++;
         SaveSessionCart(sessionCart);
     }
 
-    public async Task DecreaseQuantityAsync(int id)
+    public async Task DecreaseQuantityAsync(Guid publicId)
     {
         if (IsLoggedIn)
         {
-            var cart =
-                await _apiClient.GetAsync<CartDto>(CartApiBase);
-
-            var item =
-                cart?.Items.FirstOrDefault(i => i.Id == id);
+            var cart = await _apiClient.GetAsync<CartDto>(CartApiBase);
+            var item = cart?.Items.FirstOrDefault(i => i.PublicId == publicId);
 
             if (item == null)
                 return;
@@ -140,25 +123,20 @@ public class CartService : ICartService
             if (item.Quantity <= 1)
             {
                 await _apiClient.DeleteAsync<CartDto>(
-                    $"{CartApiBase}/items/{id}");
+                    $"{CartApiBase}/items/{publicId}");
             }
             else
             {
-                await _apiClient.PutAsync<UpdateCartItemDto, CartDto>(
-                    $"{CartApiBase}/items/{id}",
-                    new UpdateCartItemDto
-                    {
-                        Quantity = item.Quantity - 1
-                    });
+                await _apiClient.PostAsync<CartDto>(
+                    $"{CartApiBase}/items/{publicId}/decrease");
             }
 
             return;
         }
 
         var sessionCart = GetSessionCart();
-
-        var sessionItem =
-            sessionCart.FirstOrDefault(x => x.ProductId == id);
+        var sessionItem = sessionCart.FirstOrDefault(
+            x => x.PublicId == publicId);
 
         if (sessionItem == null)
             return;
@@ -171,27 +149,24 @@ public class CartService : ICartService
         SaveSessionCart(sessionCart);
     }
 
-    public async Task RemoveFromCartAsync(int id)
+    public async Task RemoveFromCartAsync(Guid publicId)
     {
         if (IsLoggedIn)
         {
             await _apiClient.DeleteAsync<CartDto>(
-                $"{CartApiBase}/items/{id}");
+                $"{CartApiBase}/items/{publicId}");
 
             return;
         }
 
-        var cart = GetSessionCart();
-
-        var item =
-            cart.FirstOrDefault(x => x.ProductId == id);
+        var guestCart = GetSessionCart();
+        var item = guestCart.FirstOrDefault(x => x.PublicId == publicId);
 
         if (item == null)
             return;
 
-        cart.Remove(item);
-
-        SaveSessionCart(cart);
+        guestCart.Remove(item);
+        SaveSessionCart(guestCart);
     }
 
     public async Task ClearCartAsync()
@@ -202,14 +177,12 @@ public class CartService : ICartService
             return;
         }
 
-        SaveSessionCart(
-            new List<CartItemViewModel>());
+        SaveSessionCart(new List<CartItemViewModel>());
     }
 
     public async Task<int> GetCartCountAsync()
     {
         var cart = await GetCartAsync();
-
         return cart.Items.Sum(x => x.Quantity);
     }
 
@@ -222,13 +195,9 @@ public class CartService : ICartService
                 401);
         }
 
-        var cart =
-            await _apiClient.PostAsync<ApplyCouponDto, CartDto>(
-                $"{CartApiBase}/coupon",
-                new ApplyCouponDto
-                {
-                    Code = code
-                });
+        var cart = await _apiClient.PostAsync<ApplyCouponDto, CartDto>(
+            $"{CartApiBase}/coupon",
+            new ApplyCouponDto { Code = code });
 
         return MapFromApi(cart);
     }
@@ -242,9 +211,8 @@ public class CartService : ICartService
                 401);
         }
 
-        var cart =
-            await _apiClient.DeleteAsync<CartDto>(
-                $"{CartApiBase}/coupon");
+        var cart = await _apiClient.DeleteAsync<CartDto>(
+            $"{CartApiBase}/coupon");
 
         return MapFromApi(cart);
     }
@@ -255,12 +223,10 @@ public class CartService : ICartService
         => Session.GetObject<List<CartItemViewModel>>(CartKey)
            ?? new List<CartItemViewModel>();
 
-    private void SaveSessionCart(
-        List<CartItemViewModel> cart)
+    private void SaveSessionCart(List<CartItemViewModel> cart)
         => Session.SetObject(CartKey, cart);
 
-    private static CartViewModel MapFromApi(
-        CartDto? cart)
+    private static CartViewModel MapFromApi(CartDto? cart)
     {
         if (cart == null)
         {
@@ -274,6 +240,7 @@ public class CartService : ICartService
             .Select(i => new CartItemViewModel
             {
                 Id = i.Id,
+                PublicId = i.PublicId,
                 ProductId = i.ProductId,
                 ProductName = i.ProductName,
                 Price = i.UnitPrice,
@@ -281,41 +248,21 @@ public class CartService : ICartService
                 IsOnSale = i.IsOnSale,
                 Quantity = i.Quantity,
                 ImageUrl = i.ProductImageUrl,
-                ThumbnailUrl = i.ProductThumbnailUrl,   
+                ThumbnailUrl = i.ProductThumbnailUrl,
                 AvailableStock = i.AvailableStock
             })
-            .ToList();            
+            .ToList();
 
         return new CartViewModel
         {
             Items = items,
-
-            // Original/main price.
             Subtotal = cart.Subtotal,
-
-            // Sale discount.
-            SaleDiscountAmount =
-                cart.SaleDiscountAmount,
-
-            // Campaign discount.
-            CampaignDiscountAmount =
-                cart.CampaignDiscountAmount,
-
-            // Coupon information.
-            AppliedCouponCode =
-                cart.AppliedCouponCode,
-
-            DiscountAmount =
-                cart.DiscountAmount,
-
-            FreeShippingApplied =
-                cart.FreeShippingApplied,
-
-            // Final amount after:
-            // Sale + Campaign + Coupon.
-            Total =
-                cart.TotalAmount,
-
+            SaleDiscountAmount = cart.SaleDiscountAmount,
+            CampaignDiscountAmount = cart.CampaignDiscountAmount,
+            AppliedCouponCode = cart.AppliedCouponCode,
+            DiscountAmount = cart.DiscountAmount,
+            FreeShippingApplied = cart.FreeShippingApplied,
+            Total = cart.TotalAmount,
             CanApplyCoupon = true
         };
     }
@@ -323,27 +270,18 @@ public class CartService : ICartService
     private static CartViewModel MapFromSession(
         List<CartItemViewModel> items)
     {
-        var subtotal =
-            items.Sum(i => i.Total);
+        var subtotal = items.Sum(i => i.Total);
 
         return new CartViewModel
         {
             Items = items,
-
             Subtotal = subtotal,
-
             SaleDiscountAmount = 0m,
-
             CampaignDiscountAmount = 0m,
-
             AppliedCouponCode = null,
-
             DiscountAmount = 0m,
-
             FreeShippingApplied = false,
-
             Total = subtotal,
-
             CanApplyCoupon = false
         };
     }
@@ -380,8 +318,7 @@ public class CartService : ICartService
 
         if (allMergedSuccessfully)
         {
-            SaveSessionCart(
-                new List<CartItemViewModel>());
+            SaveSessionCart(new List<CartItemViewModel>());
         }
     }
 }

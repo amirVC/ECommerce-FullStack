@@ -2,13 +2,11 @@
 
 namespace ECommerceAPI.DTOs
 {
-    // Request: client asks the API to create a Stripe PaymentIntent for an order
     public class CreatePaymentIntentDto
     {
         public int OrderId { get; set; }
     }
 
-    // Response: what the frontend needs to run Stripe.js / Stripe Elements
     public class PaymentIntentResponseDto
     {
         public string ClientSecret { get; set; } = string.Empty;
@@ -17,11 +15,11 @@ namespace ECommerceAPI.DTOs
         public string Currency { get; set; } = string.Empty;
     }
 
-    // Payment history row shown to the customer
     public class PaymentDto
     {
         public int Id { get; set; }
         public int OrderId { get; set; }
+        public Guid OrderPublicId { get; set; }
         public PaymentProvider Provider { get; set; }
         public decimal Amount { get; set; }
         public string Currency { get; set; } = string.Empty;
@@ -43,7 +41,6 @@ namespace ECommerceAPI.DTOs
         public PaymentStatus Status { get; set; }
     }
 
-    // Payment row shown to admins — same as PaymentDto plus who it belongs to.
     public class AdminPaymentDto
     {
         public int Id { get; set; }
@@ -62,9 +59,6 @@ namespace ECommerceAPI.DTOs
         public DateTime UpdatedAt { get; set; }
     }
 
-    // NOTE: if your DTOs/PagedResultDto.cs already has a generic PagedResultDto<T> with
-    // Items/TotalCount/Page/PageSize, feel free to swap this out for that instead — this
-    // is self-contained so it doesn't assume that type's exact shape.
     public class AdminPaymentHistoryResultDto
     {
         public List<AdminPaymentDto> Items { get; set; } = new();

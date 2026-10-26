@@ -29,10 +29,6 @@ namespace ECommerceAPI.Controllers
             _shipmentService = shipmentService;
         }
 
-        // ==========================================
-        // GET MY ORDERS
-        // Global limit: 100/minute
-        // ==========================================
         [HttpGet]
         public async Task<IActionResult> GetMyOrders()
         {
@@ -53,7 +49,7 @@ namespace ECommerceAPI.Controllers
                 Status = o.Status,
                 TotalAmount = o.TotalAmount,
                 OrderDate = o.OrderDate,
-
+                PublicId = o.PublicId,
                 FullName = o.FullName,
                 PhoneNumber = o.PhoneNumber,
                 Address = o.Address,
@@ -85,10 +81,6 @@ namespace ECommerceAPI.Controllers
             return Ok(result);
         }
 
-        // ==========================================
-        // GET ORDER BY ID
-        // Global limit: 100/minute
-        // ==========================================
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -113,7 +105,7 @@ namespace ECommerceAPI.Controllers
                 Status = order.Status,
                 TotalAmount = order.TotalAmount,
                 OrderDate = order.OrderDate,
-
+                PublicId = order.PublicId,
                 FullName = order.FullName,
                 PhoneNumber = order.PhoneNumber,
                 Address = order.Address,
@@ -145,10 +137,54 @@ namespace ECommerceAPI.Controllers
             return Ok(result);
         }
 
-        // ==========================================
-        // CREATE ORDER
-        // Order limit: 10/minute
-        // ==========================================
+        [HttpGet("public/{publicId:guid}")]
+        public async Task<IActionResult> GetByPublicId(Guid publicId)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var order = await _context.Orders
+                .AsNoTracking()
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync(o => o.PublicId == publicId && o.UserId == userId);
+
+            if (order == null)
+                return NotFound("Order not found.");
+
+            var result = new OrderResponseDto
+            {
+                Id = order.Id,
+                PublicId = order.PublicId,
+                Status = order.Status,
+                TotalAmount = order.TotalAmount,
+                OrderDate = order.OrderDate,
+                FullName = order.FullName,
+                PhoneNumber = order.PhoneNumber,
+                Address = order.Address,
+                City = order.City,
+                PostalCode = order.PostalCode,
+                Country = order.Country,
+                Notes = order.Notes,
+                PaymentMethod = order.PaymentMethod,
+                PaymentStatus = order.PaymentStatus,
+                CouponCode = order.CouponCode,
+                DiscountAmount = order.DiscountAmount,
+                CampaignDiscountAmount = order.CampaignDiscountAmount,
+                ShippingCost = order.ShippingCost,
+                Items = order.OrderItems.Select(oi => new OrderItemResponseDto
+                {
+                    ProductId = oi.ProductId,
+                    SKU = oi.SKU,
+                    ProductName = oi.Product.Name,
+                    Quantity = oi.Quantity,
+                    UnitPrice = oi.UnitPrice,
+                    Subtotal = oi.Quantity * oi.UnitPrice
+                }).ToList()
+            };
+
+            return Ok(result);
+        }
+
         [HttpPost]
         [EnableRateLimiting("order")]
         public async Task<IActionResult> CreateOrder(
@@ -170,11 +206,6 @@ namespace ECommerceAPI.Controllers
                 result);
         }
 
-        // ==========================================
-        // UPDATE ORDER STATUS
-        // Admin only
-        // Global limit: 100/minute
-        // ==========================================
         [HttpPut("{id}/status")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateStatus(
@@ -209,10 +240,6 @@ namespace ECommerceAPI.Controllers
             });
         }
 
-        // ==========================================
-        // GET SHIPMENT
-        // Global limit: 100/minute
-        // ==========================================
         [HttpGet("{orderId}/shipment")]
         [Authorize]
         public async Task<IActionResult> GetShipment(
@@ -236,11 +263,6 @@ namespace ECommerceAPI.Controllers
                 : Ok(shipment);
         }
 
-        // ==========================================
-        // GET ALL ORDERS
-        // Admin only
-        // Global limit: 100/minute
-        // ==========================================
         [HttpGet("all")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllOrders()
@@ -257,7 +279,7 @@ namespace ECommerceAPI.Controllers
                     Status = o.Status,
                     TotalAmount = o.TotalAmount,
                     OrderDate = o.OrderDate,
-
+                    PublicId = o.PublicId,
                     FullName = o.FullName,
                     PhoneNumber = o.PhoneNumber,
                     Address = o.Address,

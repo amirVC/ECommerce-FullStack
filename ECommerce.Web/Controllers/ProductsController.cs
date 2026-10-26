@@ -31,9 +31,6 @@ public class ProductsController : Controller
     private bool IsLoggedIn =>
         !string.IsNullOrWhiteSpace(_authService.GetToken());
 
-    // ============================================================
-    // PRODUCT LIST
-    // ============================================================
 
     public async Task<IActionResult> Index(
         int page = 1,
@@ -67,7 +64,6 @@ public class ProductsController : Controller
         ViewData["Title"] = product.Name;
         ViewData["Robots"] = "index, follow";
 
-        // Use the product description for search engine snippets.
         var description = product.Description ?? string.Empty;
 
         description = System.Net.WebUtility.HtmlDecode(
@@ -95,7 +91,6 @@ public class ProductsController : Controller
 
         ViewData["MetaDescription"] = description;
 
-        // Prefer the SEO-friendly product URL as the canonical URL.
         var canonicalUrl = !string.IsNullOrWhiteSpace(product.Slug)
             ? Url.Action(
                 nameof(DetailsBySlug),
@@ -112,11 +107,6 @@ public class ProductsController : Controller
     }
 
 
-    // ============================================================
-    // PRODUCT DETAILS - EXISTING NUMERIC URL
-    // Example: /Products/Details/5
-    // ============================================================
-
     public async Task<IActionResult> Details(int id)
     {
         var product = await _productService.GetProductByIdAsync(id);
@@ -127,10 +117,6 @@ public class ProductsController : Controller
         return await BuildDetailsPageAsync(product);
     }
 
-    // ============================================================
-    // PRODUCT DETAILS - SEO-FRIENDLY SLUG URL
-    // Example: /products/wireless-headphones
-    // ============================================================
 
     [HttpGet("/products/{slug}")]
     public async Task<IActionResult> DetailsBySlug(string slug)
@@ -163,7 +149,6 @@ public class ProductsController : Controller
             ? await _reviewService.GetMyReviewForProductAsync(id)
             : null;
 
-        // Recently Viewed
 
         if (IsLoggedIn)
         {
@@ -173,8 +158,6 @@ public class ProductsController : Controller
             }
             catch
             {
-                // Recently viewed should not prevent the product page
-                // from loading if its service is temporarily unavailable.
             }
         }
         else
@@ -185,6 +168,7 @@ public class ProductsController : Controller
                 {
                     Id = product.Id,
                     Name = product.Name,
+                    Slug = product.Slug,
                     Price = product.Price,
                     ImageUrl = product.ImageUrl,
                     ThumbnailUrl = product.ThumbnailUrl,
@@ -227,15 +211,9 @@ public class ProductsController : Controller
             .Take(4)
             .ToList();
 
-        // --------------------------------------------------------
-        // Related Products
-        // --------------------------------------------------------
 
         var related = await _productService.GetRelatedProductsAsync(id);
 
-        // --------------------------------------------------------
-        // Build Product Details ViewModel
-        // --------------------------------------------------------
 
         var model = new ProductDetailsViewModel
         {
@@ -289,9 +267,6 @@ public class ProductsController : Controller
         return View("Details", model);
     }
 
-    // ============================================================
-    // SUBMIT REVIEW
-    // ============================================================
 
     [HttpPost]
     public async Task<IActionResult> SubmitReview(
@@ -344,9 +319,6 @@ public class ProductsController : Controller
             new { id = model.ProductId });
     }
 
-    // ============================================================
-    // EDIT REVIEW
-    // ============================================================
 
     [HttpPost]
     public async Task<IActionResult> EditReview(
@@ -402,9 +374,6 @@ public class ProductsController : Controller
             new { id = productId });
     }
 
-    // ============================================================
-    // DELETE REVIEW
-    // ============================================================
 
     [HttpPost]
     public async Task<IActionResult> DeleteReview(

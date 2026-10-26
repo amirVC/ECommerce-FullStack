@@ -247,14 +247,24 @@ else
                             </form>
 
 
-                            <a asp-action="Remove"
-                               asp-route-id="@item.Id"
-                               class="btn btn-outline-danger btn-sm">
-
-                                Remove
-
-                            </a>
-
+                    @if (!string.IsNullOrWhiteSpace(item.ProductSlug))
+                            {
+                                <form asp-action="RemoveBySlug"
+                                      asp-route-slug="@item.ProductSlug"
+                                      method="post">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        Remove
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a asp-action="Remove"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-outline-danger btn-sm">
+                                    Remove
+                                </a>
+                            }
                         </div>
 
                     </div>

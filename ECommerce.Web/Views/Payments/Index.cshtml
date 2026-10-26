@@ -31,8 +31,10 @@
                         <tr>
                             <td>@payment.CreatedAt.ToLocalTime().ToString("g")</td>
                             <td>
-                                <a asp-controller="Orders" asp-action="Details" asp-route-id="@payment.OrderId">
-                                    #@payment.OrderId
+                                <a asp-controller="Orders"
+                                   asp-action="DetailsByPublicId"
+                                   asp-route-publicId="@payment.OrderPublicId">
+                                    #@payment.OrderPublicId.ToString("N")[..8].ToUpper()
                                 </a>
                             </td>
                             <td>@payment.Provider</td>

@@ -4,6 +4,7 @@ public class WishlistItemDto
 {
     public int Id { get; set; }
     public int ProductId { get; set; }
+    public string? ProductSlug { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string? ProductImageUrl { get; set; }
     public string? ProductThumbnailUrl { get; set; }   
@@ -11,7 +12,6 @@ public class WishlistItemDto
     public int AvailableStock { get; set; }
     public bool InStock { get; set; }
     public DateTime AddedAt { get; set; }
-    // Final price after sale + campaign
     public decimal FinalPrice { get; set; }
 
     public decimal SaleDiscountAmount { get; set; }

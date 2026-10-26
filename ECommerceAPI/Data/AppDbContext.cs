@@ -39,17 +39,6 @@ namespace ECommerceAPI.Data
         {
             modelBuilder.HasPostgresExtension("pg_trgm");
 
-            // ============================================================
-            // PUBLIC IDs
-            // ============================================================
-            //
-            // PublicId is exposed through the API.
-            // Id remains the internal database primary key.
-            //
-            // These indexes must be unique because PublicId is used to
-            // identify resources at the API boundary.
-            // ============================================================
-
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.PublicId)
                 .IsUnique();
@@ -99,25 +88,17 @@ namespace ECommerceAPI.Data
                 .IsUnique();
 
 
-            // ============================================================
-            // User
-            // ============================================================
 
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
 
-            // ============================================================
-            // Product → Category
-            // ============================================================
-
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.Category)
                 .WithMany(c => c.Products)
                 .HasForeignKey(p => p.CategoryId);
 
-            // Product SKU
             modelBuilder.Entity<Product>()
                 .Property(p => p.SKU)
                 .HasMaxLength(50)
@@ -127,20 +108,15 @@ namespace ECommerceAPI.Data
                 .HasIndex(p => p.SKU)
                 .IsUnique();
 
-            // Product slug - unique URL per product
             modelBuilder.Entity<Product>()
                 .HasIndex(p => p.Slug)
                 .IsUnique();
 
-            // Category slug - unique URL per category
             modelBuilder.Entity<Category>()
                 .HasIndex(c => c.Slug)
                 .IsUnique();
 
 
-            // ============================================================
-            // Order → User
-            // ============================================================
 
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.User)
@@ -158,29 +134,17 @@ namespace ECommerceAPI.Data
                 .HasIndex(o => new { o.Status, o.OrderDate });
 
 
-            // ============================================================
-            // OrderItem → Order
-            // ============================================================
-
             modelBuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Order)
                 .WithMany(o => o.OrderItems)
                 .HasForeignKey(oi => oi.OrderId);
 
 
-            // ============================================================
-            // OrderItem → Product
-            // ============================================================
-
             modelBuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Product)
                 .WithMany()
                 .HasForeignKey(oi => oi.ProductId);
 
-
-            // ============================================================
-            // Decimal precision
-            // ============================================================
 
             modelBuilder.Entity<Product>()
                 .Property(p => p.Price)
@@ -207,10 +171,6 @@ namespace ECommerceAPI.Data
                 .HasOperators("gin_trgm_ops");
 
 
-            // ============================================================
-            // Cart → User
-            // ============================================================
-
             modelBuilder.Entity<Cart>()
                 .HasOne(c => c.User)
                 .WithMany()
@@ -221,9 +181,6 @@ namespace ECommerceAPI.Data
                 .IsUnique();
 
 
-            // ============================================================
-            // CartItem → Cart
-            // ============================================================
 
             modelBuilder.Entity<CartItem>()
                 .HasOne(ci => ci.Cart)
@@ -231,9 +188,6 @@ namespace ECommerceAPI.Data
                 .HasForeignKey(ci => ci.CartId);
 
 
-            // ============================================================
-            // CartItem → Product
-            // ============================================================
 
             modelBuilder.Entity<CartItem>()
                 .HasOne(ci => ci.Product)
@@ -241,15 +195,13 @@ namespace ECommerceAPI.Data
                 .HasForeignKey(ci => ci.ProductId);
 
 
-            // One row per product per cart
             modelBuilder.Entity<CartItem>()
                 .HasIndex(ci => new { ci.CartId, ci.ProductId })
                 .IsUnique();
 
-
-            // ============================================================
-            // ProductImage → Product
-            // ============================================================
+            modelBuilder.Entity<CartItem>()
+    .HasIndex(ci => ci.PublicId)
+    .IsUnique();
 
             modelBuilder.Entity<ProductImage>()
                 .HasOne(i => i.Product)
@@ -257,10 +209,6 @@ namespace ECommerceAPI.Data
                 .HasForeignKey(i => i.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-
-            // ============================================================
-            // Wishlist → User
-            // ============================================================
 
             modelBuilder.Entity<Wishlist>()
                 .HasOne(w => w.User)
@@ -272,9 +220,6 @@ namespace ECommerceAPI.Data
                 .IsUnique();
 
 
-            // ============================================================
-            // WishlistItem → Wishlist
-            // ============================================================
 
             modelBuilder.Entity<WishlistItem>()
                 .HasOne(wi => wi.Wishlist)
@@ -282,9 +227,6 @@ namespace ECommerceAPI.Data
                 .HasForeignKey(wi => wi.WishlistId);
 
 
-            // ============================================================
-            // WishlistItem → Product
-            // ============================================================
 
             modelBuilder.Entity<WishlistItem>()
                 .HasOne(wi => wi.Product)
@@ -292,15 +234,11 @@ namespace ECommerceAPI.Data
                 .HasForeignKey(wi => wi.ProductId);
 
 
-            // One row per product per wishlist
             modelBuilder.Entity<WishlistItem>()
                 .HasIndex(wi => new { wi.WishlistId, wi.ProductId })
                 .IsUnique();
 
 
-            // ============================================================
-            // Review
-            // ============================================================
 
             modelBuilder.Entity<Review>(entity =>
             {
@@ -328,9 +266,6 @@ namespace ECommerceAPI.Data
             });
 
 
-            // ============================================================
-            // Recently Viewed
-            // ============================================================
 
             modelBuilder.Entity<RecentlyViewed>(entity =>
             {
@@ -360,9 +295,6 @@ namespace ECommerceAPI.Data
             });
 
 
-            // ============================================================
-            // Coupon
-            // ============================================================
 
             modelBuilder.Entity<Coupon>()
                 .HasIndex(c => c.Code)
@@ -381,9 +313,6 @@ namespace ECommerceAPI.Data
                 .HasPrecision(18, 2);
 
 
-            // ============================================================
-            // CouponProduct
-            // ============================================================
 
             modelBuilder.Entity<CouponProduct>()
                 .HasKey(cp => new { cp.CouponId, cp.ProductId });
@@ -399,9 +328,6 @@ namespace ECommerceAPI.Data
                 .HasForeignKey(cp => cp.ProductId);
 
 
-            // ============================================================
-            // CouponCategory
-            // ============================================================
 
             modelBuilder.Entity<CouponCategory>()
                 .HasKey(cc => new { cc.CouponId, cc.CategoryId });
@@ -417,9 +343,6 @@ namespace ECommerceAPI.Data
                 .HasForeignKey(cc => cc.CategoryId);
 
 
-            // ============================================================
-            // CouponUsage
-            // ============================================================
 
             modelBuilder.Entity<CouponUsage>()
                 .HasOne(u => u.Coupon)
@@ -442,27 +365,18 @@ namespace ECommerceAPI.Data
                 .HasPrecision(18, 2);
 
 
-            // ============================================================
-            // Cart coupon fields
-            // ============================================================
 
             modelBuilder.Entity<Cart>()
                 .Property(c => c.DiscountAmount)
                 .HasPrecision(18, 2);
 
 
-            // ============================================================
-            // Order coupon fields
-            // ============================================================
 
             modelBuilder.Entity<Order>()
                 .Property(o => o.DiscountAmount)
                 .HasPrecision(18, 2);
 
 
-            // ============================================================
-            // CampaignProduct
-            // ============================================================
 
             modelBuilder.Entity<CampaignProduct>()
                 .HasKey(cp => new { cp.CampaignId, cp.ProductId });
@@ -480,9 +394,6 @@ namespace ECommerceAPI.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
 
-            // ============================================================
-            // CampaignCategory
-            // ============================================================
 
             modelBuilder.Entity<CampaignCategory>()
                 .HasKey(cc => new { cc.CampaignId, cc.CategoryId });
@@ -500,9 +411,6 @@ namespace ECommerceAPI.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
 
-            // ============================================================
-            // Payment → Order
-            // ============================================================
 
             modelBuilder.Entity<Payment>()
                 .HasOne(p => p.Order)
@@ -522,9 +430,6 @@ namespace ECommerceAPI.Data
                 .HasIndex(p => p.PaymentIntentId);
 
 
-            // ============================================================
-            // RefundRequest → Order/User
-            // ============================================================
 
             modelBuilder.Entity<RefundRequest>()
                 .HasOne(r => r.Order)
@@ -539,9 +444,6 @@ namespace ECommerceAPI.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
 
-            // ============================================================
-            // Address → User
-            // ============================================================
 
             modelBuilder.Entity<Address>()
                 .HasOne(a => a.User)
@@ -550,9 +452,6 @@ namespace ECommerceAPI.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
 
-            // ============================================================
-            // Order → SavedAddress
-            // ============================================================
 
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.SavedAddress)
@@ -561,9 +460,6 @@ namespace ECommerceAPI.Data
                 .OnDelete(DeleteBehavior.SetNull);
 
 
-            // ============================================================
-            // Order → DeliveryMethod
-            // ============================================================
 
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.DeliveryMethod)
@@ -572,9 +468,6 @@ namespace ECommerceAPI.Data
                 .OnDelete(DeleteBehavior.SetNull);
 
 
-            // ============================================================
-            // Order → Shipment (1:1)
-            // ============================================================
 
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.Shipment)
@@ -583,9 +476,6 @@ namespace ECommerceAPI.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
 
-            // ============================================================
-            // Shipment → ShipmentStatusHistory
-            // ============================================================
 
             modelBuilder.Entity<Shipment>()
                 .HasMany(s => s.StatusHistory)
@@ -594,19 +484,11 @@ namespace ECommerceAPI.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
 
-            // Decimal precision for shipping
             modelBuilder.Entity<DeliveryMethod>()
                 .Property(d => d.Price)
                 .HasPrecision(18, 2);
 
 
-            // ============================================================
-            // Seed default delivery methods
-            // ============================================================
-            //
-            // PublicId values are fixed because HasData requires
-            // deterministic seed data.
-            // ============================================================
 
             modelBuilder.Entity<DeliveryMethod>().HasData(
                 new DeliveryMethod
@@ -636,9 +518,6 @@ namespace ECommerceAPI.Data
             );
 
 
-            // ============================================================
-            // Refresh Tokens
-            // ============================================================
 
             modelBuilder.Entity<RefreshToken>(entity =>
             {
@@ -652,9 +531,6 @@ namespace ECommerceAPI.Data
             });
 
 
-            // ============================================================
-            // AuditLog
-            // ============================================================
 
             modelBuilder.Entity<AuditLog>(entity =>
             {

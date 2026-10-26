@@ -121,8 +121,6 @@ public class CheckoutController : Controller
             PaymentMethod = model.PaymentMethod,
             AddressId = selectedAddress.Id,
             DeliveryMethodId = selectedMethod!.Id,
-            // The API has final say: it zeroes this out if a FreeShipping
-            // coupon is validly applied, regardless of what's sent here.
             ShippingCost = CalculateShippingCost(cart, selectedMethod),
             Items = cart.Items.Select(c => new OrderItemDto
             {
@@ -147,27 +145,31 @@ public class CheckoutController : Controller
 
         if (string.Equals(model.PaymentMethod, "Card", StringComparison.OrdinalIgnoreCase))
         {
-            return RedirectToAction(nameof(Pay), new { orderId = order.Id });
+            return RedirectToAction(nameof(PayByPublicId), new { publicId = order.PublicId });
         }
 
         return RedirectToAction(nameof(Success));
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Pay(int orderId)
+    // New URL: /Checkout/Pay/3f2b8c1e-...
+    [HttpGet("Checkout/Pay/{publicId:guid}")]
+    public async Task<IActionResult> PayByPublicId(Guid publicId)
     {
         if (!_authService.IsLoggedIn())
         {
             return RedirectToAction("Login", "Account");
         }
 
-        var order = await _orderService.GetOrderByIdAsync(orderId);
+        // The API filters by PublicId AND the logged-in user, so another user's order returns null here
+        var order = await _orderService.GetOrderByPublicIdAsync(publicId);
         if (order == null)
             return NotFound();
 
-        if (string.Equals(order.PaymentStatus, "Succeeded", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(order.PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase))
             return RedirectToAction(nameof(Success));
-        var intent = await _paymentService.CreatePaymentIntentAsync(orderId);
+
+        // order.Id is only used server-to-server
+        var intent = await _paymentService.CreatePaymentIntentAsync(order.Id);
         if (intent == null)
         {
             TempData["PaymentError"] = "Could not start payment. Please try again or contact support.";
@@ -176,13 +178,26 @@ public class CheckoutController : Controller
 
         ViewBag.ClientSecret = intent.ClientSecret;
         ViewBag.PublishableKey = _stripeOptions.PublishableKey;
-        ViewBag.OrderId = orderId;
+        ViewBag.OrderPublicId = order.PublicId;
         ViewBag.Amount = intent.Amount;
         ViewBag.Currency = intent.Currency;
 
-        return View();
+        return View("Pay");
     }
 
+    // Old URL: /Checkout/Pay?orderId=56 -> permanent redirect to the GUID URL
+    [HttpGet]
+    public async Task<IActionResult> Pay(int orderId)
+    {
+        if (!_authService.IsLoggedIn())
+            return RedirectToAction("Login", "Account");
+
+        var order = await _orderService.GetOrderByIdAsync(orderId);   // the API checks ownership
+        if (order == null)
+            return NotFound();
+
+        return RedirectToActionPermanent(nameof(PayByPublicId), new { publicId = order.PublicId });
+    }
     public IActionResult Success()
     {
         return View();

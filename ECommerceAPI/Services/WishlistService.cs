@@ -129,7 +129,30 @@ public class WishlistService : IWishlistService
         return await MapToDtoAsync(wishlist);
     }
 
+    public async Task<WishlistDto> RemoveBySlugAsync(
+    int userId,
+    string slug)
+    {
+        var wishlist =
+            await GetOrCreateWishlistAsync(userId);
 
+        var item =
+            wishlist.WishlistItems.FirstOrDefault(
+                wi => wi.Product.Slug == slug);
+
+        if (item == null)
+        {
+            throw new NotFoundException(
+                "Product not found in wishlist.");
+        }
+
+        _context.WishlistItems.Remove(item);
+        wishlist.WishlistItems.Remove(item);
+
+        await _context.SaveChangesAsync();
+
+        return await MapToDtoAsync(wishlist);
+    }
     private async Task<Wishlist> GetOrCreateWishlistAsync(
         int userId)
     {
@@ -226,6 +249,7 @@ public class WishlistService : IWishlistService
                     Id = wishlistItem.Id,
                     ProductId = product.Id,
                     ProductName = product.Name,
+                    ProductSlug = product.Slug,
                     ProductImageUrl = product.ImageUrl,
                     ProductThumbnailUrl = product.ThumbnailUrl,
 

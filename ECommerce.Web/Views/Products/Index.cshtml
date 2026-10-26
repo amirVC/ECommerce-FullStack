@@ -235,13 +235,20 @@
                                 }
 
                                 <!-- Add to Cart: Keep Numeric Product ID -->
-                                <a asp-controller="Cart"
-                                   asp-action="Add"
-                                   asp-route-id="@product.Id"
-                                   class="btn btn-success">
-                                    Add to Cart
-                                </a>
+                                <form asp-controller="Cart"
+                                      asp-action="Add"
+                                      asp-route-slug="@product.Slug"
+                                      method="post"
+                                      class="d-grid">
 
+                                    <input type="hidden" name="quantity" value="1" />
+
+                                    <button type="submit"
+                                            class="btn btn-success"
+                                            disabled="@(string.IsNullOrWhiteSpace(product.Slug) || product.Stock <= 0)">
+                                        Add to Cart
+                                    </button>
+                                </form>
                                 <!-- Wishlist -->
                                 @{
                                     var isWishlisted =
@@ -389,8 +396,9 @@
                         );
                     }
 
-                    updateWishlistBadge(data.isWishlisted);
-                } else {
+        updateWishlistBadge(data.count);
+    }
+    else {
                     alert(data.message || 'Something went wrong.');
                 }
             } catch (err) {

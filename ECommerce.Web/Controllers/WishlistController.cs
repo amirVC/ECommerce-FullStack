@@ -127,6 +127,26 @@ public class WishlistController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost("Wishlist/RemoveBySlug/{slug}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveBySlug(string slug, string? returnUrl = null)
+    {
+        if (!IsLoggedIn)
+            return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Index), "Wishlist") });
+
+        try
+        {
+            await _wishlistService.RemoveBySlugAsync(slug);
+            TempData["Success"] = "Product removed from wishlist.";
+        }
+        catch (ApiException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectBack(returnUrl);
+    }
+
     [HttpPost]
     public async Task<IActionResult> ToggleAjax(int productId)
     {
@@ -143,7 +163,9 @@ public class WishlistController : Controller
             else
                 await _wishlistService.AddToWishlistAsync(productId);
 
-            return Json(new { success = true, isWishlisted = !isCurrentlyWishlisted });
+            var count = await _wishlistService.GetWishlistCountAsync();
+
+            return Json(new { success = true, isWishlisted = !isCurrentlyWishlisted, count });
         }
         catch (ApiException ex)
         {

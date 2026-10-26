@@ -1,4 +1,5 @@
-﻿using ECommerce.Web.Exceptions;
+﻿
+using ECommerce.Web.Exceptions;
 using ECommerce.Web.Interfaces;
 using ECommerce.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,6 @@ public class CartController : Controller
     public async Task<IActionResult> Index()
     {
         var cart = await _cartService.GetCartAsync();
-
         return View(cart);
     }
 
@@ -45,11 +45,11 @@ public class CartController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public async Task<IActionResult> Increase(int id)
+    public async Task<IActionResult> Increase(Guid publicId)
     {
         try
         {
-            await _cartService.IncreaseQuantityAsync(id);
+            await _cartService.IncreaseQuantityAsync(publicId);
         }
         catch (ApiException ex)
         {
@@ -59,11 +59,11 @@ public class CartController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public async Task<IActionResult> Decrease(int id)
+    public async Task<IActionResult> Decrease(Guid publicId)
     {
         try
         {
-            await _cartService.DecreaseQuantityAsync(id);
+            await _cartService.DecreaseQuantityAsync(publicId);
         }
         catch (ApiException ex)
         {
@@ -73,11 +73,11 @@ public class CartController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public async Task<IActionResult> Remove(int id)
+    public async Task<IActionResult> Remove(Guid publicId)
     {
         try
         {
-            await _cartService.RemoveFromCartAsync(id);
+            await _cartService.RemoveFromCartAsync(publicId);
             TempData["Success"] = "Product removed from cart.";
         }
         catch (ApiException ex)
@@ -134,4 +134,40 @@ public class CartController : Controller
 
         return RedirectToAction(nameof(Index));
     }
+
+    
+[HttpPost("/Cart/Add/{slug}")]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Add(
+    string slug,
+    int quantity = 1)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+            return NotFound();
+
+        if (quantity <= 0)
+        {
+            TempData["Error"] = "Quantity must be greater than zero.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var product = await _productService.GetProductBySlugAsync(slug);
+
+        if (product == null)
+            return NotFound();
+
+        try
+        {
+            await _cartService.AddToCartAsync(product, quantity);
+
+            TempData["Success"] = $"{product.Name} added to cart.";
+        }
+        catch (ApiException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
 }

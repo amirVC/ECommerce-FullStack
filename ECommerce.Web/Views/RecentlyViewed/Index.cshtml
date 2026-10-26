@@ -63,9 +63,24 @@
                                 </div>
                             }
                             <p class="card-text text-primary fw-bold mb-3">@item.Price.ToString("C")</p>
-                            <a asp-controller="Products" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm mt-auto">
-                                View Product
-                            </a>
+                            @if (!string.IsNullOrWhiteSpace(item.Slug))
+                            {
+                                <a asp-controller="Products"
+                                   asp-action="DetailsBySlug"
+                                   asp-route-slug="@item.Slug"
+                                   class="btn btn-outline-primary btn-sm mt-auto">
+                                    View Product
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Products"
+                                   asp-action="Details"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-outline-primary btn-sm mt-auto">
+                                    View Product
+                                </a>
+                            }
                         </div>
                     </div>
                 </div>

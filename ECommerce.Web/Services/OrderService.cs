@@ -45,4 +45,14 @@ public class OrderService : ApiServiceBase, IOrderService
             return null;
         return await DeserializeAsync<OrderResponseDto>(response);
     }
+
+    public async Task<OrderResponseDto?> GetOrderByPublicIdAsync(Guid publicId)
+    {
+        var client = CreateClient();
+        var response = await client.GetAsync($"api/orders/public/{publicId}");
+        if (!response.IsSuccessStatusCode)
+            return null;
+        return await DeserializeAsync<OrderResponseDto>(response);
+    }
+
 }

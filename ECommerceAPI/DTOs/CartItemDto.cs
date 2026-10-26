@@ -4,9 +4,10 @@
     {
         public int Id { get; set; }
         public int ProductId { get; set; }
+        public Guid PublicId { get; set; }
         public string ProductName { get; set; } = string.Empty;
         public string? ProductImageUrl { get; set; }
-        public string? ProductThumbnailUrl { get; set; }   // NEW
+        public string? ProductThumbnailUrl { get; set; }  
 
         public decimal OriginalUnitPrice { get; set; }
         public decimal SaleDiscountAmount { get; set; }

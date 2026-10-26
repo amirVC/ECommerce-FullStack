@@ -47,7 +47,7 @@
                 @foreach (var order in Model)
                 {
                     <tr>
-                        <td>#@order.Id</td>
+                        <td>#@order.PublicId.ToString("N")[..8].ToUpper()</td>
                         <td>@order.OrderDate.ToString("yyyy-MM-dd")</td>
                         <td>
                             <span class="badge @(string.Equals(order.PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase) && string.Equals(order.Status, "Processing", StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-primary")">
@@ -61,8 +61,8 @@
                         </td>
                         <td>$@order.TotalAmount</td>
                         <td>
-                            <a asp-action="Details"
-                               asp-route-id="@order.Id"
+                            <a asp-action="DetailsByPublicId"
+                               asp-route-publicId="@order.PublicId"
                                class="btn btn-sm btn-outline-dark">
                                 View
                             </a>

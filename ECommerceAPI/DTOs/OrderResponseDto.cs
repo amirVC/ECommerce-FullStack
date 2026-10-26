@@ -5,12 +5,11 @@
         public int Id { get; set; }
 
         public string Status { get; set; } = string.Empty;
-
+        public Guid PublicId { get; set; }
         public decimal TotalAmount { get; set; }
 
         public DateTime OrderDate { get; set; }
 
-        // Customer Information
         public string FullName { get; set; } = string.Empty;
 
         public string PhoneNumber { get; set; } = string.Empty;
@@ -25,7 +24,6 @@
 
         public string? Notes { get; set; }
 
-        // Payment
         public string PaymentMethod { get; set; } = string.Empty;
 
         public string PaymentStatus { get; set; } = string.Empty;
@@ -37,7 +35,6 @@
         public decimal CampaignDiscountAmount { get; set; }
 
         public decimal ShippingCost { get; set; }
-        // Order Items
         public List<OrderItemResponseDto> Items { get; set; } = new();
     }
 

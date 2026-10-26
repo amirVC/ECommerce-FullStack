@@ -96,8 +96,8 @@ public class OrderService : IOrderService
                 order.OrderItems.Add(new OrderItem
                 {
                     ProductId = product.Id,
-                    Product = product, // wire up directly — avoids re-querying the saved order at the end
-                    SKU = product.SKU, // snapshot — stays correct even if the product's SKU changes later
+                    Product = product, 
+                    SKU = product.SKU, 
                     Quantity = item.Quantity,
                     UnitPrice = finalUnitPrice
                 });
@@ -175,7 +175,7 @@ public class OrderService : IOrderService
                 Status = order.Status,
                 TotalAmount = order.TotalAmount,
                 OrderDate = order.OrderDate,
-
+                PublicId = order.PublicId,
                 FullName = order.FullName,
                 PhoneNumber = order.PhoneNumber,
                 Address = order.Address,
@@ -208,4 +208,5 @@ public class OrderService : IOrderService
             throw;
         }
     }
+
 }

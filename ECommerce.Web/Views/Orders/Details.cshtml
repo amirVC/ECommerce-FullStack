@@ -71,7 +71,7 @@
     }
 
     <h2 class="mb-4">
-        Order #@Model.Id
+        Order #@Model.PublicId.ToString("N")[..8].ToUpper()
     </h2>
     <div class="card mb-4">
         <div class="card-body">
@@ -101,7 +101,7 @@
     {
         <div class="alert alert-warning d-flex justify-content-between align-items-center">
             <span>This order is awaiting payment.</span>
-            <a asp-controller="Checkout" asp-action="Pay" asp-route-orderId="@Model.Id"
+            <a asp-controller="Checkout" asp-action="PayByPublicId" asp-route-publicId="@Model.PublicId"
                class="btn btn-sm btn-warning">
                 Complete Payment
             </a>
