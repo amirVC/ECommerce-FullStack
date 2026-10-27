@@ -59,7 +59,7 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
         return (await DeserializeAsync<AdminProductDto>(response))!;
     }
     public async Task<AdminProductDto> UpdateAsync(
-        int id,
+        string slug,
         AdminUpdateProductDto dto,
         IFormFile? imageFile)
     {
@@ -80,7 +80,9 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
             dto.SaleEndDate,
             imageFile);
 
-        var response = await client.PutAsync($"api/admin/products/{id}", content);
+        var response = await client.PutAsync(
+            $"api/admin/products/by-slug/{Uri.EscapeDataString(slug)}",
+            content);
         await EnsureSuccessOrThrowApiAsync(response);
 
         response.EnsureSuccessStatusCode();
@@ -119,6 +121,27 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
         return dto;
     }
 
+
+    public async Task<AdminUpdateProductDto?> GetBySlugAsync(string slug)
+    {
+        var client = CreateClient();
+
+        var response = await client.GetAsync(
+            $"api/admin/products/by-slug/{Uri.EscapeDataString(slug)}");
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        var dto = await DeserializeAsync<AdminUpdateProductDto>(response);
+
+        if (dto != null)
+        {
+            dto.SaleStartDate = ToLocalForDisplay(dto.SaleStartDate);
+            dto.SaleEndDate = ToLocalForDisplay(dto.SaleEndDate);
+        }
+
+        return dto;
+    }
 
     private async Task EnsureSuccessOrThrowApiAsync(HttpResponseMessage response)
     {
@@ -163,7 +186,7 @@ public class AdminProductService : ApiServiceBase, IAdminProductService
         }
         catch (JsonException)
         {
-            // body was plain text
+          
         }
 
         return null;

@@ -4,6 +4,8 @@ namespace ECommerce.Web.DTOs;
 
 public class AdminUpdateProductDto : IValidatableObject
 {
+    public int Id { get; set; }
+
     [Required(ErrorMessage = "SKU is required.")]
     [StringLength(50)]
     public string SKU { get; set; } = string.Empty;
@@ -25,7 +27,6 @@ public class AdminUpdateProductDto : IValidatableObject
 
     public int CategoryId { get; set; }
 
-    // Sale pricing
     public decimal? SalePrice { get; set; }
 
     public DateTime? SaleStartDate { get; set; }

@@ -289,6 +289,7 @@ namespace ECommerceAPI.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Slug")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");

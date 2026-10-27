@@ -2,11 +2,13 @@
 using ECommerce.Web.Exceptions;
 using ECommerce.Web.Interfaces;
 using ECommerce.Web.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
+[Authorize(Roles = "Admin")]
 public class ProductsController : Controller
 {
     private readonly IAdminProductService _productService;
@@ -35,6 +37,9 @@ public class ProductsController : Controller
         ViewBag.Search = search;
         ViewBag.CurrentPage = result.CurrentPage;
         ViewBag.TotalPages = result.TotalPages;
+
+        var effectivePageSize = result.PageSize > 0 ? result.PageSize : 10;
+        ViewBag.RowOffset = (Math.Max(result.CurrentPage, 1) - 1) * effectivePageSize;
 
         return View(result.Items);
     }
@@ -91,54 +96,58 @@ public class ProductsController : Controller
             TempData["ErrorMessage"] =
                 "Product was created, but some gallery images failed to upload. You can add them here.";
 
-            return RedirectToAction(nameof(Edit), new { id = createdProduct.Id });
+            return string.IsNullOrWhiteSpace(createdProduct.Slug)
+                ? RedirectToAction(nameof(Index))
+                : RedirectToAction(nameof(Edit), new { slug = createdProduct.Slug });
         }
 
         TempData["SuccessMessage"] = "Product created successfully.";
         return RedirectToAction(nameof(Index));
     }
 
-    public async Task<IActionResult> Edit(int id)
+    [HttpGet("Admin/Products/Edit/{slug}")]
+    public async Task<IActionResult> Edit(string slug)
     {
-        var product = await _productService.GetByIdAsync(id);
+        var product = await _productService.GetBySlugAsync(slug);
 
         if (product == null)
             return NotFound();
 
         var model = new AdminEditProductViewModel
         {
-            Id = id,
+            Id = product.Id,
+            OriginalSlug = slug,
             Product = product,
             Categories = await _categoryService.GetAllAsync(),
-            Images = await _productService.GetImagesAsync(id)
+            Images = await _productService.GetImagesAsync(product.Id)
         };
 
         return View(model);
     }
 
-    [HttpPost]
+    [HttpPost("Admin/Products/Edit/{slug}")]
     public async Task<IActionResult> Edit(
-        int id,
+        string slug,
         AdminEditProductViewModel model)
     {
         if (!ModelState.IsValid)
         {
-            await ReloadEditModelAsync(id, model);
-            return View("Edit", model);
+            return await ReloadEditViewAsync(slug, model);
         }
+
+        AdminProductDto updated;
 
         try
         {
-            await _productService.UpdateAsync(
-                id,
+            updated = await _productService.UpdateAsync(
+                slug,
                 model.Product,
                 model.ImageFile);
         }
         catch (ApiException ex)
         {
             AddProductError(ex.Message);
-            await ReloadEditModelAsync(id, model);
-            return View("Edit", model);
+            return await ReloadEditViewAsync(slug, model);
         }
         catch (HttpRequestException)
         {
@@ -146,12 +155,14 @@ public class ProductsController : Controller
                 string.Empty,
                 "The product could not be saved. Please check the values and try again.");
 
-            await ReloadEditModelAsync(id, model);
-            return View("Edit", model);
+            return await ReloadEditViewAsync(slug, model);
         }
 
         TempData["SuccessMessage"] = "Product updated successfully.";
-        return RedirectToAction(nameof(Edit), new { id });
+
+        var currentSlug = string.IsNullOrWhiteSpace(updated.Slug) ? slug : updated.Slug;
+
+        return RedirectToAction(nameof(Edit), new { slug = currentSlug });
     }
 
     [HttpPost]
@@ -185,7 +196,7 @@ public class ProductsController : Controller
             }
         }
 
-        return RedirectToAction(nameof(Edit), new { id = productId });
+        return await RedirectToEditAsync(productId);
     }
 
     [HttpPost]
@@ -195,7 +206,7 @@ public class ProductsController : Controller
     {
         await _productService.DeleteImageAsync(imageId);
 
-        return RedirectToAction(nameof(Edit), new { id = productId });
+        return await RedirectToEditAsync(productId);
     }
 
     [HttpPost]
@@ -205,7 +216,7 @@ public class ProductsController : Controller
     {
         await _productService.SetPrimaryImageAsync(imageId);
 
-        return RedirectToAction(nameof(Edit), new { id = productId });
+        return await RedirectToEditAsync(productId);
     }
 
     [HttpPost]
@@ -216,7 +227,7 @@ public class ProductsController : Controller
     {
         await _productService.UpdateImageAltTextAsync(imageId, altText ?? string.Empty);
 
-        return RedirectToAction(nameof(Edit), new { id = productId });
+        return await RedirectToEditAsync(productId);
     }
 
     private void AddProductError(string message)
@@ -243,17 +254,31 @@ public class ProductsController : Controller
         }
     }
 
-    private async Task ReloadEditModelAsync(int id, AdminEditProductViewModel model)
+    private async Task<IActionResult> ReloadEditViewAsync(
+        string slug,
+        AdminEditProductViewModel model)
     {
+        var existing = await _productService.GetBySlugAsync(slug);
+
+        if (existing == null)
+            return NotFound();
+
+        model.Id = existing.Id;
+        model.OriginalSlug = slug;
         model.Categories = await _categoryService.GetAllAsync();
-        model.Images = await _productService.GetImagesAsync(id);
+        model.Images = await _productService.GetImagesAsync(existing.Id);
+        model.Product.ImageUrl = existing.ImageUrl;
 
-        var existing = await _productService.GetByIdAsync(id);
+        return View("Edit", model);
+    }
 
-        if (existing != null)
-        {
-            model.Product.ImageUrl = existing.ImageUrl;
-        }
+    private async Task<IActionResult> RedirectToEditAsync(int productId)
+    {
+        var product = await _productService.GetByIdAsync(productId);
+
+        return string.IsNullOrWhiteSpace(product?.Slug)
+            ? RedirectToAction(nameof(Index))
+            : RedirectToAction(nameof(Edit), new { slug = product.Slug });
     }
 
     private async Task UploadGalleryImagesAsync(

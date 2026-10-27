@@ -3,6 +3,7 @@
 @{
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Products";
+    var rowOffset = (int)(ViewBag.RowOffset ?? 0);
 }
 
 <h2 class="mb-4">
@@ -54,7 +55,7 @@
 <table class="table table-bordered table-hover">
     <thead class="table-dark">
         <tr>
-            <th>ID</th>
+            <th style="width:60px">#</th>
             <th>SKU</th>
             <th>Image</th>
             <th>Name</th>
@@ -62,14 +63,16 @@
             <th>Price</th>
             <th>Stock</th>
             <th>Category</th>
+            <th>Created</th>
             <th width="170">Actions</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var product in Model)
+        @for (var i = 0; i < Model.Count; i++)
         {
+            var product = Model[i];
             <tr>
-                <td>@product.Id</td>
+                <td>@(rowOffset + i + 1)</td>
                 <td><code>@product.SKU</code></td>
                 <td>
                     @{
@@ -88,12 +91,16 @@
                 <td>$@product.Price</td>
                 <td>@product.Stock</td>
                 <td>@product.CategoryName</td>
+                <td>@product.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
                 <td>
-                    <a asp-action="Edit"
-                       asp-route-id="@product.Id"
-                       class="btn btn-warning btn-sm">
-                        ✏️ Edit
-                    </a>
+                    @if (!string.IsNullOrWhiteSpace(product.Slug))
+                    {
+                        <a asp-action="Edit"
+                           asp-route-slug="@product.Slug"
+                           class="btn btn-warning btn-sm">
+                            ✏️ Edit
+                        </a>
+                    }
                     <form asp-action="Delete"
                           asp-route-id="@product.Id"
                           method="post"

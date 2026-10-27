@@ -64,6 +64,28 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
+    [HttpGet("by-slug/{slug}")]
+    public async Task<IActionResult> GetBySlug(string slug)
+    {
+        var product = await _adminProductService.GetBySlugAsync(slug);
+
+        if (product == null)
+            return NotFound();
+
+        return Ok(product);
+    }
+
+    [HttpPut("by-slug/{slug}")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UpdateBySlug(
+        string slug,
+        [FromForm] AdminUpdateProductDto dto)
+    {
+        var product = await _adminProductService.UpdateBySlugAsync(slug, dto);
+
+        return Ok(product);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {

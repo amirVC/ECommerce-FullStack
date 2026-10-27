@@ -16,5 +16,11 @@ public interface IAdminProductService
 
     Task<AdminUpdateProductDto?> GetByIdAsync(int id);
 
+    Task<AdminUpdateProductDto?> GetBySlugAsync(string slug);
+
+    Task<AdminProductResponseDto> UpdateBySlugAsync(
+        string slug,
+        AdminUpdateProductDto dto);
+
     Task<PagedResultDto<AdminProductResponseDto>> SearchAsync(ProductSearchDto dto);
 }

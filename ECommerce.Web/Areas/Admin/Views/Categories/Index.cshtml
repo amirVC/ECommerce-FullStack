@@ -6,65 +6,66 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Categories</h2>
 
-    <h2>📂 Categories</h2>
-
-    <a asp-action="Create"
-       class="btn btn-primary">
+    <a asp-action="Create" class="btn btn-primary">
         + Create Category
     </a>
-
 </div>
 
 <table class="table table-bordered table-hover">
-
     <thead class="table-dark">
-
         <tr>
-            <th>ID</th>
+            <th style="width: 80px;">#</th>
             <th>Name</th>
-            <th width="180">Actions</th>
+            <th style="width: 180px;">Actions</th>
         </tr>
-
     </thead>
 
     <tbody>
+        @if (Model != null && Model.Any())
+        {
+            var rowNumber = 1;
 
-        @foreach (var category in Model)
+            @foreach (var category in Model)
+            {
+                <tr>
+                    <td>@rowNumber</td>
+                    <td>@category.Name</td>
+                    <td>
+                        <a asp-area="Admin"
+                           asp-controller="Categories"
+                           asp-action="Edit"
+                           asp-route-slug="@category.Slug"
+                           class="btn btn-sm btn-outline-primary">
+                            Edit
+                        </a>
+                        <form asp-action="Delete"
+                              asp-route-id="@category.Id"
+                              method="post"
+                              class="d-inline">
+
+                            @Html.AntiForgeryToken()
+
+                            <button type="submit"
+                                    class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Delete this category?');">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+
+                rowNumber++;
+            }
+        }
+        else
         {
             <tr>
-
-                <td>@category.Id</td>
-
-                <td>@category.Name</td>
-
-                <td>
-
-                    <a asp-action="Edit"
-                       asp-route-id="@category.Id"
-                       class="btn btn-warning btn-sm">
-                        ✏️ Edit
-                    </a>
-
-                    <form asp-action="Delete"
-                          asp-route-id="@category.Id"
-                          method="post"
-                          class="d-inline">
-
-                        <button type="submit"
-                                class="btn btn-danger btn-sm"
-                                onclick="return confirm('Delete this category?');">
-
-                           🗑 Delete
-
-                        </button>
-
-                    </form>
+                <td colspan="3" class="text-center">
+                    No categories found.
                 </td>
-
             </tr>
         }
-
     </tbody>
-
 </table>

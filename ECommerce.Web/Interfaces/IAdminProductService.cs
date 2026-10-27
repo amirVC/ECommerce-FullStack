@@ -9,11 +9,13 @@ public interface IAdminProductService
 
     Task<AdminProductDto> CreateAsync(AdminCreateProductDto dto, IFormFile? imageFile);
 
-    Task<AdminProductDto> UpdateAsync(int id, AdminUpdateProductDto dto, IFormFile? imageFile);
+    Task<AdminProductDto> UpdateAsync(string slug, AdminUpdateProductDto dto, IFormFile? imageFile);
 
     Task DeleteAsync(int id);
 
     Task<AdminUpdateProductDto?> GetByIdAsync(int id);
+
+    Task<AdminUpdateProductDto?> GetBySlugAsync(string slug);
 
     Task<PagedResultDto<AdminProductDto>> SearchAsync(ProductSearchDto dto);
 
@@ -27,6 +29,5 @@ public interface IAdminProductService
 
     Task SetPrimaryImageAsync(int imageId);
 
-    // Added method to handle the inline alt text update
     Task UpdateImageAltTextAsync(int imageId, string altText);
 }

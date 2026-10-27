@@ -15,4 +15,5 @@ public class AdminProductResponseDto
     public DateTime? SaleEndDate { get; set; }
     public bool IsOnSale { get; set; }
     public decimal EffectivePrice { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

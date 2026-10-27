@@ -20,6 +20,10 @@ public class CategoriesController : Controller
     {
         var categories = await _categoryService.GetAllAsync();
 
+        categories = categories
+            .OrderByDescending(c => c.Id)
+            .ToList();
+
         return View(categories);
     }
 
@@ -29,6 +33,7 @@ public class CategoriesController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
         AdminCreateCategoryViewModel model)
     {
@@ -40,41 +45,52 @@ public class CategoriesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public async Task<IActionResult> Edit(int id)
+    [HttpGet("Edit/{slug}")]
+    public async Task<IActionResult> Edit(string slug)
     {
-        var category = await _categoryService.GetByIdAsync(id);
+        if (string.IsNullOrWhiteSpace(slug))
+            return BadRequest();
+
+        var category = await _categoryService.GetBySlugAsync(slug);
 
         if (category == null)
             return NotFound();
 
         var model = new AdminEditCategoryViewModel
         {
-            Id = id,
+            Id = category.Id,
             Category = new AdminUpdateCategoryDto
             {
-                Name = category.Name
+                Name = category.Name,
+                Slug = category.Slug
             }
         };
 
+        ViewBag.Slug = category.Slug;
         return View(model);
     }
 
-    [HttpPost]
+    [HttpPost("Edit/{slug}")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(
-        int id,
+        string slug,
         AdminEditCategoryViewModel model)
     {
-        if (!ModelState.IsValid)
-            return View(model);
+        if (string.IsNullOrWhiteSpace(slug))
+            return BadRequest();
 
-        await _categoryService.UpdateAsync(
-            id,
-            model.Category);
+        if (!ModelState.IsValid)
+        {
+            ViewBag.Slug = slug;
+            return View(model);
+        }
+
+        await _categoryService.UpdateAsync(slug, model.Category);
 
         return RedirectToAction(nameof(Index));
     }
-
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
         await _categoryService.DeleteAsync(id);

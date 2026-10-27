@@ -6,48 +6,43 @@
 }
 
 <div class="container-fluid">
-
     <div class="d-flex justify-content-between align-items-center mb-4">
-
         <div>
-            <h2 class="mb-1">
-                ✏️ Edit Category
-            </h2>
-
+            <h2 class="mb-1">Edit Category</h2>
             <p class="text-muted mb-0">
-                Update category information.
+                Update the category name and URL slug.
             </p>
         </div>
 
         <a asp-action="Index"
            class="btn btn-outline-secondary">
-
-            ← Back to Categories
-
+            Back to Categories
         </a>
-
     </div>
 
     <div class="card shadow-sm border-0">
-
         <div class="card-header bg-dark text-white">
-
-            <h5 class="mb-0">
-                Category Information
-            </h5>
-
+            <h5 class="mb-0">Category Information</h5>
         </div>
 
         <div class="card-body">
-
-            <form asp-action="Edit"
-                  asp-route-id="@Model.Id"
+            <form asp-area="Admin"
+                  asp-controller="Categories"
+                  asp-action="Edit"
+                  asp-route-slug="@ViewBag.Slug"
                   method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3">
+                </div>
+
+                <input type="hidden" asp-for="Id" />
 
                 <div class="mb-4">
-
                     <label asp-for="Category.Name"
                            class="form-label fw-semibold">
+                        Category Name
                     </label>
 
                     <input asp-for="Category.Name"
@@ -55,37 +50,45 @@
                            placeholder="Enter category name..." />
 
                     <span asp-validation-for="Category.Name"
-                          class="text-danger">
-                    </span>
+                          class="text-danger"></span>
+                </div>
 
+                <div class="mb-4">
+                    <label asp-for="Category.Slug"
+                           class="form-label fw-semibold">
+                        URL Slug
+                    </label>
+
+                    <input asp-for="Category.Slug"
+                           class="form-control"
+                           placeholder="e.g. smart-phones"
+                           autocomplete="off" />
+
+                    <div class="form-text">
+                        Use lowercase letters, numbers, and single hyphens.
+                        Changing the slug changes the category URL.
+                    </div>
+
+                    <span asp-validation-for="Category.Slug"
+                          class="text-danger"></span>
                 </div>
 
                 <hr />
 
                 <div class="d-flex justify-content-end gap-2">
-
                     <a asp-action="Index"
                        class="btn btn-outline-secondary">
-
                         Cancel
-
                     </a>
 
                     <button type="submit"
                             class="btn btn-success px-4">
-
-                        💾 Save Category
-
+                        Save Category
                     </button>
-
                 </div>
-
             </form>
-
         </div>
-
     </div>
-
 </div>
 
 @section Scripts

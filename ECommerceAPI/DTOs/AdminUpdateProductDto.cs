@@ -1,9 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace ECommerceAPI.DTOs;
 
 public class AdminUpdateProductDto
 {
+    [BindNever]
+    public int Id { get; set; }
+
     [Required]
     [MaxLength(50)]
     public string SKU { get; set; } = string.Empty;

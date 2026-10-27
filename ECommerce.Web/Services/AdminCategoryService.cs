@@ -44,11 +44,12 @@ public class AdminCategoryService : ApiServiceBase, IAdminCategoryService
         return (await DeserializeAsync<AdminCategoryDto>(response))!;
     }
 
-    public async Task<AdminCategoryDto?> GetByIdAsync(int id)
+
+    public async Task<AdminCategoryDto?> GetBySlugAsync(string slug)
     {
         var client = CreateClient();
-
-        var response = await client.GetAsync($"api/admin/categories/{id}");
+        var response = await client.GetAsync(
+            $"api/admin/categories/{Uri.EscapeDataString(slug)}");
 
         if (!response.IsSuccessStatusCode)
             return null;
@@ -57,13 +58,12 @@ public class AdminCategoryService : ApiServiceBase, IAdminCategoryService
     }
 
     public async Task<AdminCategoryDto> UpdateAsync(
-        int id,
+        string slug,
         AdminUpdateCategoryDto dto)
     {
         var client = CreateClient();
-
         var response = await client.PutAsync(
-            $"api/admin/categories/{id}",
+            $"api/admin/categories/{Uri.EscapeDataString(slug)}",
             new StringContent(
                 JsonSerializer.Serialize(dto),
                 Encoding.UTF8,

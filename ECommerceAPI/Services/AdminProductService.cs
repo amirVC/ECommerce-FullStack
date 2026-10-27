@@ -52,7 +52,8 @@ public class AdminProductService : IAdminProductService
             SaleStartDate = p.SaleStartDate,
             SaleEndDate = p.SaleEndDate,
             IsOnSale = p.IsOnSale(),
-            EffectivePrice = p.EffectivePrice()
+            EffectivePrice = p.EffectivePrice(),
+            CreatedAt = p.CreatedAt
         }).ToList();
 
         return new PagedResultDto<AdminProductResponseDto>
@@ -86,7 +87,8 @@ public class AdminProductService : IAdminProductService
         var totalCount = await query.CountAsync();
 
         var products = await query
-            .OrderBy(p => p.Name)
+            .OrderByDescending(p => p.CreatedAt)
+            .ThenByDescending(p => p.Id)
             .Skip((dto.Page - 1) * dto.PageSize)
             .Take(dto.PageSize)
             .ToListAsync();
@@ -106,7 +108,8 @@ public class AdminProductService : IAdminProductService
             SaleStartDate = p.SaleStartDate,
             SaleEndDate = p.SaleEndDate,
             IsOnSale = p.IsOnSale(),
-            EffectivePrice = p.EffectivePrice()
+            EffectivePrice = p.EffectivePrice(),
+            CreatedAt = p.CreatedAt
         }).ToList();
 
         return new PagedResultDto<AdminProductResponseDto>
@@ -132,7 +135,7 @@ public class AdminProductService : IAdminProductService
         if (await _context.Products.AnyAsync(p => p.SKU == sku))
             throw new BadRequestException($"A product with SKU '{sku}' already exists.");
 
-        var slug = await ResolveSlugAsync(dto.Name, dto.Slug);  
+        var slug = await ResolveSlugAsync(dto.Name, dto.Slug);
 
 
         string? imageUrl = dto.ImageUrl;
@@ -146,7 +149,7 @@ public class AdminProductService : IAdminProductService
         {
             SKU = sku,
             Name = dto.Name,
-            Slug = slug,                                         
+            Slug = slug,
             Description = dto.Description,
             Price = dto.Price,
             Stock = dto.Stock,
@@ -181,6 +184,7 @@ public class AdminProductService : IAdminProductService
             Id = product.Id,
             SKU = product.SKU,
             Name = product.Name,
+            Slug = product.Slug,
             Description = product.Description,
             Price = product.Price,
             Stock = product.Stock,
@@ -190,7 +194,8 @@ public class AdminProductService : IAdminProductService
             SaleStartDate = product.SaleStartDate,
             SaleEndDate = product.SaleEndDate,
             IsOnSale = product.IsOnSale(),
-            EffectivePrice = product.EffectivePrice()
+            EffectivePrice = product.EffectivePrice(),
+            CreatedAt = product.CreatedAt
         };
     }
     public async Task<AdminProductResponseDto> UpdateAsync(
@@ -218,7 +223,7 @@ public class AdminProductService : IAdminProductService
         if (await _context.Products.AnyAsync(p => p.SKU == sku && p.Id != id))
             throw new BadRequestException($"A product with SKU '{sku}' already exists.");
 
-        var slug = await ResolveSlugAsync(dto.Name, dto.Slug, product.Id, product.Slug);   
+        var slug = await ResolveSlugAsync(dto.Name, dto.Slug, product.Id, product.Slug);
 
         var effectiveAltText = string.IsNullOrWhiteSpace(dto.ImageAltText)
             ? dto.Name
@@ -289,7 +294,7 @@ public class AdminProductService : IAdminProductService
 
         product.SKU = sku;
         product.Name = dto.Name;
-        product.Slug = slug;  
+        product.Slug = slug;
         product.Description = dto.Description;
         product.Price = dto.Price;
         product.Stock = dto.Stock;
@@ -304,6 +309,7 @@ public class AdminProductService : IAdminProductService
             Id = product.Id,
             SKU = product.SKU,
             Name = product.Name,
+            Slug = product.Slug,
             Description = product.Description,
             Price = product.Price,
             Stock = product.Stock,
@@ -313,7 +319,8 @@ public class AdminProductService : IAdminProductService
             SaleStartDate = product.SaleStartDate,
             SaleEndDate = product.SaleEndDate,
             IsOnSale = product.IsOnSale(),
-            EffectivePrice = product.EffectivePrice()
+            EffectivePrice = product.EffectivePrice(),
+            CreatedAt = product.CreatedAt
         };
     }
     public async Task DeleteAsync(int id)
@@ -345,6 +352,7 @@ public class AdminProductService : IAdminProductService
 
         return new AdminUpdateProductDto
         {
+            Id = product.Id,
             SKU = product.SKU,
             Name = product.Name,
             Slug = product.Slug,
@@ -360,29 +368,59 @@ public class AdminProductService : IAdminProductService
         };
     }
 
-    // Two admins can save the same SKU at the same moment and both pass the
-    // AnyAsync check. The unique index then rejects the second one; turn that
-    // into the same friendly 400 instead of a 500.
-private async Task SaveProductAsync(string sku, string? slug)
-{
-    try
+    public async Task<AdminUpdateProductDto?> GetBySlugAsync(string slug)
     {
-        await _context.SaveChangesAsync();
+        var id = await FindIdBySlugAsync(slug);
+
+        return id.HasValue ? await GetByIdAsync(id.Value) : null;
     }
-    catch (DbUpdateException ex) when (
-        ex.InnerException is Npgsql.PostgresException { SqlState: Npgsql.PostgresErrorCodes.UniqueViolation } pg)
+
+    public async Task<AdminProductResponseDto> UpdateBySlugAsync(
+        string slug,
+        AdminUpdateProductDto dto)
     {
-        var constraint = pg.ConstraintName ?? string.Empty;
+        var id = await FindIdBySlugAsync(slug);
 
-        if (constraint.Contains("SKU", StringComparison.OrdinalIgnoreCase))
-            throw new BadRequestException($"A product with SKU '{sku}' already exists.");
+        if (!id.HasValue)
+            throw new NotFoundException("Product not found.");
 
-        if (constraint.Contains("Slug", StringComparison.OrdinalIgnoreCase))
-            throw new BadRequestException($"The slug '{slug}' is already used by another product.");
-
-        throw;
+        return await UpdateAsync(id.Value, dto);
     }
-}
+
+    private async Task<int?> FindIdBySlugAsync(string? slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+            return null;
+
+        var normalized = slug.Trim();
+
+        return await _context.Products
+            .AsNoTracking()
+            .Where(p => p.Slug == normalized)
+            .Select(p => (int?)p.Id)
+            .FirstOrDefaultAsync();
+    }
+
+    private async Task SaveProductAsync(string sku, string? slug)
+    {
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is Npgsql.PostgresException { SqlState: Npgsql.PostgresErrorCodes.UniqueViolation } pg)
+        {
+            var constraint = pg.ConstraintName ?? string.Empty;
+
+            if (constraint.Contains("SKU", StringComparison.OrdinalIgnoreCase))
+                throw new BadRequestException($"A product with SKU '{sku}' already exists.");
+
+            if (constraint.Contains("Slug", StringComparison.OrdinalIgnoreCase))
+                throw new BadRequestException($"The slug '{slug}' is already used by another product.");
+
+            throw;
+        }
+    }
 
     private async Task<string> GenerateUniqueSlugAsync(
         string name,

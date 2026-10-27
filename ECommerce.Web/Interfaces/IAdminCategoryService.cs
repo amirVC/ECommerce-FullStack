@@ -8,10 +8,10 @@ public interface IAdminCategoryService
 
     Task<AdminCategoryDto> CreateAsync(AdminCreateCategoryDto dto);
 
-    Task<AdminCategoryDto?> GetByIdAsync(int id);
+    Task<AdminCategoryDto?> GetBySlugAsync(string slug);
 
     Task<AdminCategoryDto> UpdateAsync(
-        int id,
+        string slug,
         AdminUpdateCategoryDto dto);
 
     Task DeleteAsync(int id);
