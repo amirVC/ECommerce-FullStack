@@ -1,14 +1,17 @@
-﻿using ECommerceAPI.DTOs;
+﻿
+using ECommerceAPI.DTOs;
 
 namespace ECommerceAPI.Services.Interfaces;
 
 public interface IAdminOrderService
 {
-    Task<PagedResultDto<AdminOrderDto>> GetAllAsync(int page = 1, int pageSize = 20);
+    Task<PagedResultDto<AdminOrderDto>> GetAllAsync(
+        int page = 1,
+        int pageSize = 20);
 
-    Task<AdminOrderDetailsDto?> GetByIdAsync(int id);
+    Task<AdminOrderDetailsDto?> GetByIdAsync(Guid publicId);
 
     Task UpdateStatusAsync(
-        int id,
+        Guid publicId,
         AdminUpdateOrderStatusDto dto);
 }

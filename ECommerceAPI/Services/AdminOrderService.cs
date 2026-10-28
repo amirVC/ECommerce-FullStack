@@ -39,6 +39,7 @@ public class AdminOrderService : IAdminOrderService
             .Select(o => new AdminOrderDto
             {
                 Id = o.Id,
+                PublicId = o.PublicId,
                 CustomerName = o.User.FullName,
                 ItemCount = o.OrderItems.Count,
                 TotalPrice = o.TotalAmount,
@@ -57,14 +58,16 @@ public class AdminOrderService : IAdminOrderService
         };
     }
 
-    public async Task<AdminOrderDetailsDto?> GetByIdAsync(int id)
+
+    public async Task<AdminOrderDetailsDto?> GetByIdAsync(Guid publicId)
     {
         return await _context.Orders
             .AsNoTracking()
-            .Where(o => o.Id == id)
+            .Where(o => o.PublicId == publicId)
             .Select(order => new AdminOrderDetailsDto
             {
                 Id = order.Id,
+                PublicId = order.PublicId,
                 CustomerName = order.FullName,
                 PhoneNumber = order.PhoneNumber,
                 Address = order.Address,
@@ -90,8 +93,9 @@ public class AdminOrderService : IAdminOrderService
             .FirstOrDefaultAsync();
     }
 
+
     public async Task UpdateStatusAsync(
-        int id,
+        Guid publicId,
         AdminUpdateOrderStatusDto dto)
     {
         if (dto == null || string.IsNullOrWhiteSpace(dto.Status))
@@ -101,16 +105,14 @@ public class AdminOrderService : IAdminOrderService
 
         var validStatuses = new[]
         {
-            "Pending",
-            "Processing",
-            "Shipped",
-            "Delivered",
-            "Cancelled",
-            "Refunded"
-        };
+        "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Refunded"
+    };
 
         var validStatus = validStatuses.FirstOrDefault(
-            s => string.Equals(s, newStatus, StringComparison.OrdinalIgnoreCase));
+            s => string.Equals(
+                s,
+                newStatus,
+                StringComparison.OrdinalIgnoreCase));
 
         if (validStatus == null)
             throw new BadRequestException(
@@ -118,24 +120,28 @@ public class AdminOrderService : IAdminOrderService
 
         var order = await _context.Orders
             .Include(o => o.User)
-            .FirstOrDefaultAsync(o => o.Id == id);
+            .FirstOrDefaultAsync(o => o.PublicId == publicId);
 
         if (order == null)
             throw new NotFoundException("Order not found.");
 
         var oldStatus = order.Status;
 
-        if (string.Equals(oldStatus, validStatus, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(
+            oldStatus,
+            validStatus,
+            StringComparison.OrdinalIgnoreCase))
             return;
 
         order.Status = validStatus;
 
         await _context.SaveChangesAsync();
+
         await _auditLogService.LogAsync(
-        action: "OrderStatusUpdated",
-        entityName: "Order",
-        entityId: order.Id.ToString(),
-        details: $"Order #{order.Id} status changed from {oldStatus} to {validStatus}.");
+            action: "OrderStatusUpdated",
+            entityName: "Order",
+            entityId: order.Id.ToString(),
+            details: $"Order #{order.Id} status changed from {oldStatus} to {validStatus}.");
 
         try
         {

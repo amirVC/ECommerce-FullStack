@@ -1,4 +1,5 @@
-﻿using ECommerceAPI.DTOs;
+﻿
+using ECommerceAPI.DTOs;
 using ECommerceAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,17 +19,18 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> Get(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var orders = await _orderService.GetAllAsync(page, pageSize);
-
         return Ok(orders);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
+    [HttpGet("{publicId:guid}")]
+    public async Task<IActionResult> GetById(Guid publicId)
     {
-        var order = await _orderService.GetByIdAsync(id);
+        var order = await _orderService.GetByIdAsync(publicId);
 
         if (order == null)
             return NotFound();
@@ -36,13 +38,12 @@ public class OrdersController : ControllerBase
         return Ok(order);
     }
 
-    [HttpPut("{id}/status")]
+    [HttpPut("{publicId:guid}/status")]
     public async Task<IActionResult> UpdateStatus(
-    int id,
-    AdminUpdateOrderStatusDto dto)
+        Guid publicId,
+        [FromBody] AdminUpdateOrderStatusDto dto)
     {
-        await _orderService.UpdateStatusAsync(id, dto);
-
+        await _orderService.UpdateStatusAsync(publicId, dto);
         return NoContent();
     }
 }

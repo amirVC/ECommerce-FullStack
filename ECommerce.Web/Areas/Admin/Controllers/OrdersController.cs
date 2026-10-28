@@ -1,10 +1,12 @@
-﻿using ECommerce.Web.DTOs;
+﻿
+using ECommerce.Web.DTOs;
 using ECommerce.Web.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
+[Route("Admin/Orders")]
 public class OrdersController : Controller
 {
     private readonly IAdminOrderService _orderService;
@@ -21,81 +23,120 @@ public class OrdersController : Controller
         _shipmentService = shipmentService;
     }
 
+    [HttpGet("")]
     public async Task<IActionResult> Index()
     {
         var orders = await _orderService.GetAllAsync();
-
         return View(orders);
     }
 
-    public async Task<IActionResult> Details(int id)
+    [HttpGet("Details/{publicId:guid}")]
+    public async Task<IActionResult> Details(Guid publicId)
     {
-        var order = await _orderService.GetByIdAsync(id);
+        var order = await _orderService.GetByIdAsync(publicId);
 
         if (order == null)
             return NotFound();
 
-        ViewBag.Shipment = await _shipmentService.GetByOrderIdAsync(id);
+        ViewBag.Shipment =
+            await _shipmentService.GetByOrderIdAsync(order.Id);
 
         return View(order);
     }
-
-    [HttpPost]
+    [HttpPost("UpdateStatus/{publicId:guid}")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateStatus(
-    int id,
-    AdminUpdateOrderStatusDto dto)
+        Guid publicId,
+        AdminUpdateOrderStatusDto dto)
     {
-        await _orderService.UpdateStatusAsync(id, dto);
+        var order = await _orderService.GetByIdAsync(publicId);
 
-        return RedirectToAction(nameof(Details), new { id });
+        if (order == null)
+            return NotFound();
+
+        await _orderService.UpdateStatusAsync(publicId, dto);
+
+        return RedirectToAction(nameof(Details), new { publicId });
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Refund(int id, string? reason)
+    [HttpPost("Refund/{publicId:guid}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Refund(
+        Guid publicId,
+        string? reason)
     {
-        var result = await _paymentService.RefundAsync(id, amount: null, reason: reason);
+        var order = await _orderService.GetByIdAsync(publicId);
+
+        if (order == null)
+            return NotFound();
+
+        var result = await _paymentService.RefundAsync(
+            order.Id,
+            amount: null,
+            reason: reason);
 
         TempData["RefundResult"] = result != null
             ? $"Refunded {result.RefundedAmount:C} — payment status is now {result.Status}."
             : "Refund failed. Check that this order has a successful payment to refund.";
 
-        return RedirectToAction(nameof(Details), new { id });
+        return RedirectToAction(nameof(Details), new { publicId });
     }
 
-    // Phase 18: shipping
-
-    [HttpPost]
-    public async Task<IActionResult> CreateShipment(int id, string? carrier, string? trackingNumber)
+    [HttpPost("CreateShipment/{publicId:guid}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateShipment(
+        Guid publicId,
+        string? carrier,
+        string? trackingNumber)
     {
-        var result = await _shipmentService.CreateForOrderAsync(id, new CreateShipmentDto
-        {
-            Carrier = carrier,
-            TrackingNumber = trackingNumber
-        });
+        var order = await _orderService.GetByIdAsync(publicId);
+
+        if (order == null)
+            return NotFound();
+
+        var result = await _shipmentService.CreateForOrderAsync(
+            order.Id,
+            new CreateShipmentDto
+            {
+                Carrier = carrier,
+                TrackingNumber = trackingNumber
+            });
 
         TempData["ShipmentResult"] = result != null
             ? "Shipment created."
             : "Could not create shipment — it may already exist for this order.";
 
-        return RedirectToAction(nameof(Details), new { id });
+        return RedirectToAction(nameof(Details), new { publicId });
     }
 
-    [HttpPost]
+    [HttpPost("UpdateShipmentStatus/{publicId:guid}")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateShipmentStatus(
-        int id, string status, string? note, string? carrier, string? trackingNumber)
+        Guid publicId,
+        string status,
+        string? note,
+        string? carrier,
+        string? trackingNumber)
     {
-        var result = await _shipmentService.UpdateStatusAsync(id, new UpdateShipmentStatusDto
-        {
-            Status = status,
-            Note = note,
-            Carrier = carrier,
-            TrackingNumber = trackingNumber
-        });
+        var order = await _orderService.GetByIdAsync(publicId);
+
+        if (order == null)
+            return NotFound();
+
+        var result = await _shipmentService.UpdateStatusAsync(
+            order.Id,
+            new UpdateShipmentStatusDto
+            {
+                Status = status,
+                Note = note,
+                Carrier = carrier,
+                TrackingNumber = trackingNumber
+            });
 
         TempData["ShipmentResult"] = result != null
             ? $"Shipment status updated to {result.Status}."
             : "Could not update shipment status.";
 
-        return RedirectToAction(nameof(Details), new { id });
+        return RedirectToAction(nameof(Details), new { publicId });
     }
 }

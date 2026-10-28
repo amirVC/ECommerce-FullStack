@@ -1,5 +1,4 @@
-﻿
-using ECommerce.Web.Exceptions;
+﻿using ECommerce.Web.Exceptions;
 using ECommerce.Web.Interfaces;
 using ECommerce.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -19,14 +18,22 @@ public class CartController : Controller
         _productService = productService;
     }
 
+    [HttpGet]
     public async Task<IActionResult> Index()
     {
         var cart = await _cartService.GetCartAsync();
         return View(cart);
     }
 
+    [HttpGet]
     public async Task<IActionResult> Add(int id, int quantity = 1)
     {
+        if (quantity <= 0)
+        {
+            TempData["Error"] = "Quantity must be greater than zero.";
+            return RedirectToAction(nameof(Index));
+        }
+
         var product = await _productService.GetProductByIdAsync(id);
 
         if (product == null)
@@ -34,7 +41,7 @@ public class CartController : Controller
 
         try
         {
-            await _cartService.AddToCartAsync(product);
+            await _cartService.AddToCartAsync(product, quantity);
             TempData["Success"] = $"{product.Name} added to cart.";
         }
         catch (ApiException ex)
@@ -45,8 +52,13 @@ public class CartController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Increase(Guid publicId)
     {
+        if (publicId == Guid.Empty)
+            return BadRequest();
+
         try
         {
             await _cartService.IncreaseQuantityAsync(publicId);
@@ -59,8 +71,13 @@ public class CartController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Decrease(Guid publicId)
     {
+        if (publicId == Guid.Empty)
+            return BadRequest();
+
         try
         {
             await _cartService.DecreaseQuantityAsync(publicId);
@@ -73,8 +90,13 @@ public class CartController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Remove(Guid publicId)
     {
+        if (publicId == Guid.Empty)
+            return BadRequest();
+
         try
         {
             await _cartService.RemoveFromCartAsync(publicId);
@@ -88,6 +110,8 @@ public class CartController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Clear()
     {
         try
@@ -104,11 +128,18 @@ public class CartController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ApplyCoupon(string code)
     {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            TempData["Error"] = "Please enter a coupon code.";
+            return RedirectToAction(nameof(Index));
+        }
+
         try
         {
-            await _cartService.ApplyCouponAsync(code);
+            await _cartService.ApplyCouponAsync(code.Trim());
             TempData["Success"] = "Coupon applied!";
         }
         catch (ApiException ex)
@@ -120,6 +151,7 @@ public class CartController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> RemoveCoupon()
     {
         try
@@ -135,12 +167,11 @@ public class CartController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    
-[HttpPost("/Cart/Add/{slug}")]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> Add(
-    string slug,
-    int quantity = 1)
+    [HttpPost("/Cart/Add/{slug}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Add(
+        string slug,
+        int quantity = 1)
     {
         if (string.IsNullOrWhiteSpace(slug))
             return NotFound();
@@ -159,7 +190,6 @@ public async Task<IActionResult> Add(
         try
         {
             await _cartService.AddToCartAsync(product, quantity);
-
             TempData["Success"] = $"{product.Name} added to cart.";
         }
         catch (ApiException ex)
@@ -169,5 +199,4 @@ public async Task<IActionResult> Add(
 
         return RedirectToAction(nameof(Index));
     }
-
 }

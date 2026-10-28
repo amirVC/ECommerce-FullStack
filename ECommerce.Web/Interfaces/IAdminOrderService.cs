@@ -1,4 +1,5 @@
-﻿using ECommerce.Web.DTOs;
+﻿
+using ECommerce.Web.DTOs;
 
 namespace ECommerce.Web.Interfaces;
 
@@ -6,9 +7,9 @@ public interface IAdminOrderService
 {
     Task<List<AdminOrderDto>> GetAllAsync();
 
-    Task<AdminOrderDetailsDto?> GetByIdAsync(int id);
+    Task<AdminOrderDetailsDto?> GetByIdAsync(Guid publicId);
 
     Task UpdateStatusAsync(
-        int id,
+        Guid publicId,
         AdminUpdateOrderStatusDto dto);
 }

@@ -5,7 +5,7 @@
     ViewData["Title"] = "Your Cart";
 }
 
-<h2 class="mb-4">🛒 Your Cart</h2>
+<h2 class="mb-4">Your Cart</h2>
 
 @if (TempData["Error"] != null)
 {
@@ -25,6 +25,7 @@
 {
     <div class="text-center py-5">
         <p class="fs-5 text-muted">Your cart is empty.</p>
+
         <a asp-controller="Products"
            asp-action="Index"
            class="btn btn-primary">
@@ -50,22 +51,25 @@ else
                 @foreach (var item in Model.Items)
                 {
                     <tr id="cart-row-@item.PublicId">
-                        <td class="d-flex align-items-center gap-3">
-                            @{
-                                var itemImage = string.IsNullOrWhiteSpace(item.ThumbnailUrl)
-                                ? item.ImageUrl
-                                : item.ThumbnailUrl;
-                            }
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                @{
+                                    var itemImage =
+                                    string.IsNullOrWhiteSpace(item.ThumbnailUrl)
+                                    ? item.ImageUrl
+                                    : item.ThumbnailUrl;
+                                }
 
-                            @if (!string.IsNullOrEmpty(itemImage))
-                            {
-                                <img src="@itemImage"
-                                     alt="@item.ProductName"
-                                     style="width:60px;height:60px;object-fit:cover;"
-                                     class="rounded" />
-                            }
+                                @if (!string.IsNullOrEmpty(itemImage))
+                                {
+                                    <img src="@itemImage"
+                                         alt="@item.ProductName"
+                                         style="width:60px;height:60px;object-fit:cover;"
+                                         class="rounded" />
+                                }
 
-                            <span>@item.ProductName</span>
+                                <span>@item.ProductName</span>
+                            </div>
                         </td>
 
                         <td>
@@ -87,32 +91,65 @@ else
 
                         <td>
                             <div class="d-flex align-items-center gap-2">
-                                <a asp-action="Decrease"
-                                   asp-route-publicId="@item.PublicId"
-                                   class="btn btn-sm btn-outline-secondary"
-                                   aria-label="Decrease quantity">
-                                    −
-                                </a>
+                                <form asp-controller="Cart"
+                                      asp-action="Decrease"
+                                      method="post"
+                                      class="m-0">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="publicId"
+                                           value="@item.PublicId" />
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-secondary"
+                                            aria-label="Decrease quantity">
+                                        −
+                                    </button>
+                                </form>
 
                                 <span>@item.Quantity</span>
 
-                                <a asp-action="Increase"
-                                   asp-route-publicId="@item.PublicId"
-                                   class="btn btn-sm btn-outline-secondary"
-                                   aria-label="Increase quantity">
-                                    +
-                                </a>
+                                <form asp-controller="Cart"
+                                      asp-action="Increase"
+                                      method="post"
+                                      class="m-0">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="publicId"
+                                           value="@item.PublicId" />
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-secondary"
+                                            aria-label="Increase quantity">
+                                        +
+                                    </button>
+                                </form>
                             </div>
                         </td>
 
                         <td>@item.Total.ToString("C")</td>
 
                         <td>
-                            <a asp-action="Remove"
-                               asp-route-publicId="@item.PublicId"
-                               class="btn btn-sm btn-outline-danger">
-                                Remove
-                            </a>
+                            <form asp-controller="Cart"
+                                  asp-action="Remove"
+                                  method="post"
+                                  class="m-0">
+
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden"
+                                       name="publicId"
+                                       value="@item.PublicId" />
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-danger">
+                                    Remove
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 }
@@ -121,24 +158,36 @@ else
     </div>
 
     <div class="d-flex justify-content-between align-items-start mt-4">
-        <a asp-action="Clear"
-           class="btn btn-outline-secondary">
-            Clear Cart
-        </a>
+        <form asp-controller="Cart"
+              asp-action="Clear"
+              method="post"
+              class="m-0"
+              onsubmit="return confirm('Are you sure you want to clear your cart?');">
 
-        <div class="text-end" style="min-width: 320px;">
+            @Html.AntiForgeryToken()
+
+            <button type="submit"
+                    class="btn btn-outline-secondary">
+                Clear Cart
+            </button>
+        </form>
+
+        <div class="text-end" style="min-width:320px;">
             @if (Model.CanApplyCoupon)
             {
                 if (string.IsNullOrEmpty(Model.AppliedCouponCode))
                 {
-                    <form asp-action="ApplyCoupon"
+                    <form asp-controller="Cart"
+                          asp-action="ApplyCoupon"
                           method="post"
                           class="d-flex gap-2 mb-3 justify-content-end">
+
+                        @Html.AntiForgeryToken()
 
                         <input type="text"
                                name="code"
                                class="form-control"
-                               style="max-width: 200px;"
+                               style="max-width:200px;"
                                placeholder="Coupon code"
                                required />
 
@@ -155,7 +204,13 @@ else
                             Coupon "@Model.AppliedCouponCode" applied
                         </span>
 
-                        <form asp-action="RemoveCoupon" method="post">
+                        <form asp-controller="Cart"
+                              asp-action="RemoveCoupon"
+                              method="post"
+                              class="m-0">
+
+                            @Html.AntiForgeryToken()
+
                             <button type="submit"
                                     class="btn btn-sm btn-link text-danger">
                                 Remove

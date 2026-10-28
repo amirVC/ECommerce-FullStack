@@ -1,8 +1,11 @@
-﻿namespace ECommerceAPI.DTOs;
+﻿
+namespace ECommerceAPI.DTOs;
 
 public class AdminOrderDto
 {
     public int Id { get; set; }
+
+    public Guid PublicId { get; set; }
 
     public string CustomerName { get; set; } = string.Empty;
 

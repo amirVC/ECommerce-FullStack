@@ -24,15 +24,18 @@ public class AdminOrderService : ApiServiceBase, IAdminOrderService
 
         response.EnsureSuccessStatusCode();
 
-        return await DeserializeAsync<List<AdminOrderDto>>(response)
-               ?? new();
+        var result = await DeserializeAsync<PagedResultDto<AdminOrderDto>>(
+            response);
+
+        return result?.Items ?? new();
     }
 
-    public async Task<AdminOrderDetailsDto?> GetByIdAsync(int id)
+
+    public async Task<AdminOrderDetailsDto?> GetByIdAsync(Guid publicId)
     {
         var client = CreateClient();
-
-        var response = await client.GetAsync($"api/admin/orders/{id}");
+        var response = await client.GetAsync(
+            $"api/admin/orders/{publicId}");
 
         if (!response.IsSuccessStatusCode)
             return null;
@@ -40,14 +43,15 @@ public class AdminOrderService : ApiServiceBase, IAdminOrderService
         return await DeserializeAsync<AdminOrderDetailsDto>(response);
     }
 
+
     public async Task UpdateStatusAsync(
-        int id,
+        Guid publicId,
         AdminUpdateOrderStatusDto dto)
     {
         var client = CreateClient();
 
         var response = await client.PutAsync(
-            $"api/admin/orders/{id}/status",
+            $"api/admin/orders/{publicId}/status",
             new StringContent(
                 JsonSerializer.Serialize(dto),
                 Encoding.UTF8,
