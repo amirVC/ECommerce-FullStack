@@ -1,5 +1,4 @@
-﻿
-using AutoMapper;
+﻿using AutoMapper;
 using ECommerceAPI.Data;
 using ECommerceAPI.DTOs;
 using ECommerceAPI.Exceptions;
@@ -24,35 +23,63 @@ public class DeliveryMethodService : IDeliveryMethodService
             .Where(m => m.IsActive)
             .OrderBy(m => m.SortOrder)
             .ToListAsync();
+
         return _mapper.Map<List<DeliveryMethodDto>>(methods);
     }
 
     public async Task<List<DeliveryMethodDto>> GetAllAsync()
     {
-        var methods = await _db.DeliveryMethods.OrderBy(m => m.SortOrder).ToListAsync();
+        var methods = await _db.DeliveryMethods
+            .OrderBy(m => m.SortOrder)
+            .ToListAsync();
+
         return _mapper.Map<List<DeliveryMethodDto>>(methods);
+    }
+
+    public async Task<DeliveryMethodDto?> GetByPublicIdAsync(Guid publicId)
+    {
+        var method = await _db.DeliveryMethods
+            .FirstOrDefaultAsync(m => m.PublicId == publicId);
+
+        return method == null
+            ? null
+            : _mapper.Map<DeliveryMethodDto>(method);
     }
 
     public async Task<DeliveryMethodDto> CreateAsync(CreateDeliveryMethodDto dto)
     {
         var method = _mapper.Map<DeliveryMethod>(dto);
+
         _db.DeliveryMethods.Add(method);
+
         await _db.SaveChangesAsync();
+
         return _mapper.Map<DeliveryMethodDto>(method);
     }
 
-    public async Task<DeliveryMethodDto> UpdateAsync(int id, UpdateDeliveryMethodDto dto)
+    public async Task<DeliveryMethodDto> UpdateAsync(
+        Guid publicId,
+        UpdateDeliveryMethodDto dto)
     {
-        var method = await _db.DeliveryMethods.FindAsync(id) ?? throw new NotFoundException("Delivery method not found.");
+        var method = await _db.DeliveryMethods
+            .FirstOrDefaultAsync(m => m.PublicId == publicId)
+            ?? throw new NotFoundException("Delivery method not found.");
+
         _mapper.Map(dto, method);
+
         await _db.SaveChangesAsync();
+
         return _mapper.Map<DeliveryMethodDto>(method);
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(Guid publicId)
     {
-        var method = await _db.DeliveryMethods.FindAsync(id) ?? throw new NotFoundException("Delivery method not found.");
+        var method = await _db.DeliveryMethods
+            .FirstOrDefaultAsync(m => m.PublicId == publicId)
+            ?? throw new NotFoundException("Delivery method not found.");
+
         _db.DeliveryMethods.Remove(method);
+
         await _db.SaveChangesAsync();
     }
 }

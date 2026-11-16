@@ -3,6 +3,8 @@ namespace ECommerce.Web.DTOs;
 public class DeliveryMethodDto
 {
     public int Id { get; set; }
+    public Guid PublicId { get; set; }
+
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public decimal Price { get; set; }
@@ -23,4 +25,6 @@ public class CreateDeliveryMethodDto
     public int SortOrder { get; set; }
 }
 
-public class UpdateDeliveryMethodDto : CreateDeliveryMethodDto { }
+public class UpdateDeliveryMethodDto : CreateDeliveryMethodDto
+{
+}

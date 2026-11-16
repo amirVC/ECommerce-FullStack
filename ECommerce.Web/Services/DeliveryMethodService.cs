@@ -28,9 +28,9 @@ public class DeliveryMethodService : IDeliveryMethodService
         return methods ?? new List<DeliveryMethodDto>();
     }
 
-    public async Task<DeliveryMethodDto?> GetByIdAsync(int id)
+    public async Task<DeliveryMethodDto?> GetByPublicIdAsync(Guid publicId)
     {
-        return await _apiClient.GetAsync<DeliveryMethodDto>($"{AdminApiBase}/{id}");
+        return await _apiClient.GetAsync<DeliveryMethodDto>($"{AdminApiBase}/{publicId}");
     }
 
     public async Task<DeliveryMethodDto?> CreateAsync(CreateDeliveryMethodDto dto)
@@ -38,13 +38,14 @@ public class DeliveryMethodService : IDeliveryMethodService
         return await _apiClient.PostAsync<CreateDeliveryMethodDto, DeliveryMethodDto>(AdminApiBase, dto);
     }
 
-    public async Task<DeliveryMethodDto?> UpdateAsync(int id, UpdateDeliveryMethodDto dto)
+    public async Task<DeliveryMethodDto?> UpdateAsync(Guid publicId, UpdateDeliveryMethodDto dto)
     {
-        return await _apiClient.PutAsync<UpdateDeliveryMethodDto, DeliveryMethodDto>($"{AdminApiBase}/{id}", dto);
+        return await _apiClient.PutAsync<UpdateDeliveryMethodDto, DeliveryMethodDto>(
+            $"{AdminApiBase}/{publicId}", dto);
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(Guid publicId)
     {
-        await _apiClient.DeleteAsync<object>($"{AdminApiBase}/{id}");
+        await _apiClient.DeleteAsync<object>($"{AdminApiBase}/{publicId}");
     }
 }

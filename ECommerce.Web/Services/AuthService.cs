@@ -40,8 +40,12 @@ public class AuthService : IAuthService
 
         var response = await client.PostAsync("api/auth/register", content);
 
-        if (!response.IsSuccessStatusCode)
-            return null;
+if (response.StatusCode == HttpStatusCode.BadRequest ||
+    response.StatusCode == HttpStatusCode.Conflict)
+    return null; // email already registered or invalid data
+
+if (!response.IsSuccessStatusCode)
+    throw new Exception("Registration service error.");
 
         var responseJson = await response.Content.ReadAsStringAsync();
 

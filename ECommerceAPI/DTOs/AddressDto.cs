@@ -1,6 +1,5 @@
 ﻿namespace ECommerceAPI.DTOs
 {
-    // AddressDto.cs
     public class AddressDto
     {
         public int Id { get; set; }
@@ -30,10 +29,11 @@
     }
     public class UpdateAddressDto : CreateAddressDto { }
 
-    // DeliveryMethodDto.cs
+   
     public class DeliveryMethodDto
     {
         public int Id { get; set; }
+            public Guid PublicId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public decimal Price { get; set; }

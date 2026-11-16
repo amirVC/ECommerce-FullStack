@@ -183,27 +183,32 @@ public class AccountController : Controller
         return View(new RegisterDto());
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Register(RegisterDto model)
+[HttpPost]
+public async Task<IActionResult> Register(RegisterDto model)
+{
+    if (!ModelState.IsValid)
+        return View(model);
+
+    string? message;
+    try
     {
-        if (!ModelState.IsValid)
-            return View(model);
-
-        var message = await _authService.RegisterAsync(model);
-
-        if (message == null)
-        {
-            ModelState.AddModelError(
-                "",
-                "Registration failed. The email may already be registered.");
-
-            return View(model);
-        }
-
-        TempData["SuccessMessage"] = message;
-
-        return RedirectToAction(nameof(Login));
+        message = await _authService.RegisterAsync(model);
     }
+    catch
+    {
+        ModelState.AddModelError("", "We could not complete your registration right now. Please try again later.");
+        return View(model);
+    }
+
+    if (message == null)
+    {
+        ModelState.AddModelError("", "This email is already registered.");
+        return View(model);
+    }
+
+    TempData["SuccessMessage"] = message;
+    return RedirectToAction(nameof(Login));
+}
 
     [HttpGet]
     public async Task<IActionResult> ConfirmEmail(string? token)

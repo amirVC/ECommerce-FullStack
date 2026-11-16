@@ -12,7 +12,7 @@ public class ProductViewModel
 
     public string? Description { get; set; }
 
-    // Original product price
+  
     public decimal Price { get; set; }
 
     public int Stock { get; set; }
@@ -30,10 +30,6 @@ public class ProductViewModel
 
     public int ReviewCount { get; set; }
 
-    // --------------------------------------------------
-    // SALE PRICING
-    // --------------------------------------------------
-
     public decimal? SalePrice { get; set; }
 
     public DateTime? SaleStartDate { get; set; }
@@ -42,12 +38,10 @@ public class ProductViewModel
 
     public bool IsOnSale { get; set; }
 
-    // Price after product sale
+   
     public decimal EffectivePrice { get; set; }
 
-    // --------------------------------------------------
-    // CAMPAIGN
-    // --------------------------------------------------
+
 
     public decimal CampaignDiscount { get; set; }
 
@@ -55,19 +49,15 @@ public class ProductViewModel
 
     public string? CampaignName { get; set; }
 
-    // --------------------------------------------------
-    // FINAL PRICE
-    // --------------------------------------------------
 
-    // Final customer price after Sale + Campaign
+
+    
     public decimal FinalPrice { get; set; }
 
-    // Total discount compared to original Price
+   
     public decimal TotalDiscountAmount { get; set; }
 
-    // --------------------------------------------------
-    // HELPER PROPERTIES FOR UI
-    // --------------------------------------------------
+
 
     public bool HasAnyDiscount =>
         IsOnSale || HasCampaign || TotalDiscountAmount > 0;

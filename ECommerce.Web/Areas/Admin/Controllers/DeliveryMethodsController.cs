@@ -27,12 +27,14 @@ public class DeliveryMethodsController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateDeliveryMethodDto dto)
     {
         if (!ModelState.IsValid)
             return View(dto);
 
         var created = await _service.CreateAsync(dto);
+
         if (created == null)
         {
             ModelState.AddModelError("", "Could not create the delivery method.");
@@ -44,9 +46,10 @@ public class DeliveryMethodsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Edit(int id)
+    public async Task<IActionResult> Edit(Guid id)
     {
-        var method = await _service.GetByIdAsync(id);
+        var method = await _service.GetByPublicIdAsync(id);
+
         if (method == null)
             return NotFound();
 
@@ -61,24 +64,26 @@ public class DeliveryMethodsController : Controller
             SortOrder = method.SortOrder
         };
 
-        ViewBag.Id = id;
+        ViewBag.PublicId = id;
         return View(dto);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Edit(int id, UpdateDeliveryMethodDto dto)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(Guid id, UpdateDeliveryMethodDto dto)
     {
         if (!ModelState.IsValid)
         {
-            ViewBag.Id = id;
+            ViewBag.PublicId = id;
             return View(dto);
         }
 
         var updated = await _service.UpdateAsync(id, dto);
+
         if (updated == null)
         {
             ModelState.AddModelError("", "Could not update the delivery method.");
-            ViewBag.Id = id;
+            ViewBag.PublicId = id;
             return View(dto);
         }
 
@@ -87,9 +92,11 @@ public class DeliveryMethodsController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Delete(int id)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(Guid id)
     {
         await _service.DeleteAsync(id);
+
         TempData["Success"] = "Delivery method deleted.";
         return RedirectToAction(nameof(Index));
     }

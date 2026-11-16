@@ -112,13 +112,15 @@ namespace ECommerceAPI.Services
                     "Confirm your ECommerce account",
                     emailBody);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send confirmation email to {Email}", user.Email);
-                throw;
-            }
+catch (Exception ex)
+{
+    _logger.LogError(ex, "Failed to send confirmation email to {Email}", user.Email);
 
-            return "Registration successful. Please check your email to confirm your account.";
+    // The account is saved, so don't fail the whole registration.
+    return "Your account was created, but we could not send the confirmation email. Please contact support or try again later.";
+}
+
+return "Registration successful. Please check your email to confirm your account.";
         }
 
         public async Task<bool> ConfirmEmail(string token)
@@ -210,10 +212,10 @@ namespace ECommerceAPI.Services
                 await RegisterFailedLoginAsync(user);
 
                 await _auditLogService.LogAsync(
-                    action: "LoginSucceeded",
+                   action: "LoginFailed",
+                    details: "Invalid password.",
                     entityName: "User",
                     entityId: user.Id.ToString(),
-                    details: "User logged in successfully.",
                     userId: user.Id,
                     userEmail: user.Email,
                     ipAddress: ipAddress);
