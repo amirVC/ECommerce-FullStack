@@ -253,9 +253,13 @@
                     <tr>
                         <td>@payment.CreatedAt.ToLocalTime().ToString("g")</td>
                         <td>
-                            <a asp-area="Admin" asp-controller="Orders" asp-action="Details" asp-route-id="@payment.OrderId" class="fw-semibold text-decoration-none">
-                                #@payment.OrderId
-                            </a>
+<a asp-area="Admin"
+   asp-controller="Orders"
+   asp-action="Details"
+   asp-route-publicId="@payment.OrderPublicId"
+   class="fw-semibold text-decoration-none">
+    View Order
+</a>
                         </td>
                         <td class="customer-cell">
                             <div class="name">@payment.CustomerName</div>

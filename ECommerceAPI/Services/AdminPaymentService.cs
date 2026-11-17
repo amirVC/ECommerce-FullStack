@@ -17,23 +17,26 @@ namespace ECommerceAPI.Services
             _db = db;
         }
 
-        private static readonly Expression<Func<Payment, AdminPaymentDto>> ProjectToDto = p => new AdminPaymentDto
-        {
-            Id = p.Id,
-            OrderId = p.OrderId,
-            UserId = p.Order != null ? p.Order.UserId : 0,
-            CustomerName = p.Order != null ? p.Order.FullName : string.Empty,
-            CustomerEmail = p.Order != null && p.Order.User != null ? p.Order.User.Email : string.Empty,
-            Provider = p.Provider,
-            PaymentIntentId = p.PaymentIntentId,
-            Amount = p.Amount,
-            Currency = p.Currency,
-            Status = p.Status,
-            RefundedAmount = p.RefundedAmount,
-            FailureReason = p.FailureReason,
-            CreatedAt = p.CreatedAt,
-            UpdatedAt = p.UpdatedAt
-        };
+private static readonly Expression<Func<Payment, AdminPaymentDto>> ProjectToDto = p => new AdminPaymentDto
+{
+    Id = p.Id,
+    OrderId = p.OrderId,
+    OrderPublicId = p.Order != null ? p.Order.PublicId : Guid.Empty,
+    UserId = p.Order != null ? p.Order.UserId : 0,
+    CustomerName = p.Order != null ? p.Order.FullName : string.Empty,
+    CustomerEmail = p.Order != null && p.Order.User != null
+        ? p.Order.User.Email
+        : string.Empty,
+    Provider = p.Provider,
+    PaymentIntentId = p.PaymentIntentId,
+    Amount = p.Amount,
+    Currency = p.Currency,
+    Status = p.Status,
+    RefundedAmount = p.RefundedAmount,
+    FailureReason = p.FailureReason,
+    CreatedAt = p.CreatedAt,
+    UpdatedAt = p.UpdatedAt
+};
 
         public async Task<AdminPaymentHistoryResultDto> GetAllAsync(PaymentQueryParameters query)
         {

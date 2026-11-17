@@ -14,7 +14,6 @@
         public bool IsDefault { get; set; }
     }
 
-    // CreateAddressDto.cs / UpdateAddressDto.cs — same shape minus Id
     public class CreateAddressDto
     {
         public string FullName { get; set; } = string.Empty;
@@ -33,7 +32,7 @@
     public class DeliveryMethodDto
     {
         public int Id { get; set; }
-            public Guid PublicId { get; set; }
+        public Guid PublicId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public decimal Price { get; set; }
